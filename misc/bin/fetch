@@ -74,7 +74,32 @@ get_de_wm() {
 	echo ${wm:-unknown}
 }
 storage=$(df -h / | awk '/^\//{print $3}')
+# progress bar
+FULL=━
+EMPTY=━
 
+draw() {
+	perc=$1
+	size=$2
+	inc=$((perc * size / 100))
+	out=
+	color="$3"
+	for v in $(seq 0 $((size - 1))); do
+		test "$v" -le "$inc" &&
+			out="${out}\e[1;${color}m${FULL}" ||
+			out="${out}\e[0;37m${GRY}${EMPTY}"
+	done
+	printf $out
+}
+# cpu
+cpu=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}')
+c_lvl=$(printf "%.0f" $cpu)
+
+# ram
+ram=$(free | awk '/Mem:/ {print int($3/$2 * 100.0)}')
+
+# uptime
+uptm=$(uptime -p | sed -e 's/hour/hr/' -e 's/hours/hrs/' -e 's/minutes/mins/' -e 's/minute/min/' -e 's/up //')
 #########################################################
 #Cleanup first
 clear
@@ -133,7 +158,20 @@ printf "%s%b" "$PADC" "$PUR        shell  $GRY⏹ $RST${SHELL##*/}\n"
 printf "%s%b" "$PADC" "$CYN         term  $GRY⏹ $RST$term\n"
 printf "%s%b" "$PADC" "$RED           wm  $GRY⏹ $RST$(get_de_wm)\n"
 printf "%s%b" "$PADC" "$BLU         disk  $GRY⏹ $RST$storage used\n"
+printf "\n\n"
+printf "%b" "$PADC"
+printf "   $PUR%-4s $WHT%-5s %-25s \n" " cpu" "$c_lvl%" $(draw $c_lvl 15 35)
 
+printf "%b" "$RST$PADC"
+printf "   $PUR%-4s $WHT%-5s %-25s \n" " ram" "$ram%" $(draw $ram 15 35)
+printf " $RST\n"
+
+printf "%s%b" "$PADC" "$CYN        uptime 神 $RST$uptm\n"
+printf " $RST\n"
+
+BAR=" ▓▒░"
+OUTT="$RED$BAR$GRN$BAR$YLW$BAR$BLU$BAR$PUR$BAR$CYN$BAR$WHT$BAR$RED$BAR$RST"
+printf "%s%b" "$PADC" "$OUTT"
 #########################################################
 # hide the cursor and wait for user input
 tput civis
