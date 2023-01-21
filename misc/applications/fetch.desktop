@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Fetch
+Icon=~/.local/share/applications/dattebayo.svg
+Terminal=false
+Exec=sh -c "alacritty --hold -t fetch -e ~/.local/bin/fetch"
+StartupNotify=false
