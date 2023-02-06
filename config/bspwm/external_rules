@@ -1,0 +1,71 @@
+#! /bin/sh
+
+wid=$1
+class=$2
+instance=$3
+consequences=$4
+title=$(xtitle "$wid")
+
+if [ "$instance" = Alacritty ] ; then
+	case "$title" in
+		ranger)
+			echo "state=floating rectangle=811x316+0+0 center=on"
+			;;
+		fetch)
+		    echo "border=off state=floating rectangle=392x642+487+63"
+		    ;;
+		ncmpcpp)
+			echo "state=floating rectangle=800x515+410+50 center=on"
+			;;
+	esac
+fi
+
+main () {
+case "$class" in
+	# File Manager
+	Thunar)
+	    eval "$consequences"
+	    [ "$state" ] || echo "desktop=^2 follow=on focus=on"
+	    ;;
+	# Browser 
+	Google-chrome|Brave-browser|firefox)
+	    eval "$consequences"
+		[ "$state" ] || echo "desktop=^3 follow=on focus=on"
+		;;
+	# IDE/Editor
+	Code)
+	    eval "$consequences"
+		[ "$state" ] || echo "desktop=^4 follow=on focus=on"
+		;;
+	# Office
+	wps)
+	    eval "$consequences"
+		[ "$state" ] || echo "desktop=^5 follow=on focus=on"
+		;;
+	# Communication
+	TelegramDesktop|Slack)
+	    eval "$consequences"
+		[ "$state" ] || echo "desktop=^6 follow=on focus=on"
+		;;
+	# Music
+	Spotify|spicetify)
+	    eval "$consequences"
+		[ "$state" ] || echo "desktop=^7 follow=on focus=on"
+		;;
+	# Apps
+	discord|obs)
+	    eval "$consequences"
+		[ "$state" ] || echo "desktop=^8 follow=on focus=on"
+		;;
+	######################################################
+	mpv)
+	    eval "$consequences"
+		[ "$state" ] || echo "state=floating focus=on center=on rectangle=925x519+0+0 border=off"
+		;;
+	Pavucontrol)
+	    eval "$consequences"
+	    [ "$state" ] || echo "state=floating follow=on center=on"
+	    ;;
+esac
+}
+main
