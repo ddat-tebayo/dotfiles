@@ -170,7 +170,7 @@ printf "%s%b" "$PADC" "$CYN        uptime 神 $RST$uptm\n"
 printf " $RST\n"
 
 BAR=" ▓▒░"
-OUTT="$RED$BAR$GRN$BAR$YLW$BAR$BLU$BAR$PUR$BAR$CYN$BAR$WHT$BAR$RED$BAR$RST"
+OUTT=" $RED$BAR$GRN$BAR$YLW$BAR$BLU$BAR$PUR$BAR$CYN$BAR$WHT$BAR$RED$BAR$RST"
 printf "%s%b" "$PADC" "$OUTT"
 #########################################################
 # hide the cursor and wait for user input

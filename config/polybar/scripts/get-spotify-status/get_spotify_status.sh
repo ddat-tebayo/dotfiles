@@ -2,7 +2,7 @@
 
 # The name of polybar bar which houses the main spotify module and the control modules.
 # PARENT_BAR="now-playing"
-PARENT_BAR="shaka4"
+PARENT_BAR="music-bar"
 PARENT_BAR_PID=$(pgrep -a "polybar" | grep "$PARENT_BAR" | cut -d" " -f1)
 
 # Set the source audio player here.
@@ -32,7 +32,7 @@ EXIT_CODE=$?
 if [ $EXIT_CODE -eq 0 ]; then
     STATUS=$PLAYERCTL_STATUS
 else
-    STATUS="No player is running"
+    STATUS="No music is playing"
 fi
 
 if [ "$1" == "--status" ]; then
@@ -43,7 +43,7 @@ else
     elif [ "$STATUS" = "Paused"  ]; then
         update_hooks "$PARENT_BAR_PID" 2
         playerctl --player=$PLAYER metadata --format "$FORMAT"
-    elif [ "$STATUS" = "No player is running"  ]; then
+    elif [ "$STATUS" = "No music is playing"  ]; then
         echo "$STATUS"
     else
         update_hooks "$PARENT_BAR_PID" 1
