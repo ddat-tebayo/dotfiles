@@ -17,6 +17,9 @@ if [ "$instance" = Alacritty ] ; then
 		ncmpcpp)
 			echo "state=floating rectangle=800x515+410+50 center=on"
 			;;
+		neovim)
+			echo "desktop=^4 follow=on focus=on"
+			;;
 	esac
 fi
 
