@@ -5,4 +5,6 @@ return require('packer').startup(function()
 	use 'EdenEast/nightfox.nvim'
 	-- Dashboard
 	use 'goolord/alpha-nvim'
+	-- Status bar
+	use 'nvim-lualine/lualine.nvim'
 end)
