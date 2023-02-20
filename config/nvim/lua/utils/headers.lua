@@ -4,7 +4,7 @@
 local headers = {
   ["bunny"] = {
    	[[        _______________________________________ ]],
-	 	[[       | Here you are, a cup of coffer at 3AM | ]],
+	 	[[       | Here you are, a cup of coffee at 3AM | ]],
 	 	[[       |__  __________________________________| ]],
 	 	[[ {\_/}    )/                                    ]],
 	 	[[ (●‿●)                                          ]],
