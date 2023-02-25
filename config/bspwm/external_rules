@@ -46,7 +46,7 @@ case "$class" in
 		[ "$state" ] || echo "desktop=^5 follow=on focus=on"
 		;;
 	# Communication
-	TelegramDesktop|Slack)
+	zalo.exe|TelegramDesktop|Slack)
 	    eval "$consequences"
 		[ "$state" ] || echo "desktop=^6 follow=on focus=on"
 		;;
