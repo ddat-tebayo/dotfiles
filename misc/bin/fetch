@@ -16,6 +16,7 @@ BLD="\033[1m"
 PBLU=$(printf "%b" "\e[34m")
 PPUR=$(printf "%b" "\e[35m")
 PWHT=$(printf "%b" "\e[37m")
+PRST=$(printf "%b" "\e[0m")
 
 #########################################################
 # Reference: https://github.com/unixporn/robbb/blob/master/fetcher.sh

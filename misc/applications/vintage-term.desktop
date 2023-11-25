@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Vintage Terminal
+Icon=~/.local/share/applications/imgs/vintage_term.svg
+Terminal=false
+Exec=sh -c "cool-retro-term -T Vintage-Terminal --profile Vintage --fullscreen"
+StartupNotify=false
