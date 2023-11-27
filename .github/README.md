@@ -16,7 +16,7 @@
 
 ## 🌿 Information
 
-<img src="assets/fetch.png" alt="Linux Fetch" align="right" width="650">
+<img src="assets/fetch.png" alt="Linux Fetch" align="right" width="450">
 
 |Distro|[Arch](https://archlinux.org/)|
 |:---:|:---:|
