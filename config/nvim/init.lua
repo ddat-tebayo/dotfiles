@@ -6,4 +6,6 @@ require('plugins.alpha')
 require('plugins.lualine')
 require('plugins.bufferline')
 require('custom.discord')
+require('custom.neovide')
+
 
