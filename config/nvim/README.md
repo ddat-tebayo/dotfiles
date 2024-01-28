@@ -1,0 +1,1 @@
+# Migrate neovim configuration to [nvim-config](https://github.com/ddat-tebayo/nvim-config.git) repository
