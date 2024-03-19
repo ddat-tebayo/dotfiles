@@ -1,0 +1,41 @@
+import = ["~/.config/alacritty/rice-colors.toml", "~/.config/alacritty/fonts.toml"]
+
+live_config_reload = true
+
+[cursor]
+unfocused_hollow = false
+
+[cursor.style]
+blinking = "On"
+shape = "Block"
+
+[selection]
+save_to_clipboard = true
+
+[window]
+decorations = "full"
+dynamic_title = true
+opacity = 1
+dynamic_padding = true
+startup_mode = "Windowed"
+
+[window.padding]
+x = 20
+y = 20
+
+[window.class]
+general = "Alacritty"
+instance = "Alacritty"
+
+[window.dimensions]
+columns = 82
+lines = 25
+
+[scrolling]
+history = 10000
+multiplier = 3
+
+[bell]
+animation = "Linear"
+duration = 0
+command = { program = "paplay", args = ["/usr/share/sounds/freedesktop/stereo/dialog-error.oga"] }
