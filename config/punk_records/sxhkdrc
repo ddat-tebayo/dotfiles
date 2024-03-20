@@ -1,0 +1,177 @@
+#|||----- Applications -----|||#
+
+# Open Terminal
+super + Return
+	OpenApps --terminal
+
+# Open floating Terminal
+super + alt + Return
+	OpenApps --floating
+
+# Application menu
+super + @space
+	OpenApps --menu
+
+# Firefox, Ranger, Nvim, Spotify 
+shift + alt + {b,f,v,m}
+       {
+	    firefox, \
+        alacritty -t ranger -e ranger, \
+        alacritty -t neovim -e nvim, \
+        env LD_PRELOAD=/usr/lib/spotify-adblock.so spotify --disable-gpu --no-zygote %U
+		}
+
+#|||----- System Keybindings -----|||#
+
+# Show keybindings help
+alt + F1
+	KeybindingsHelp
+
+# Theme Selector
+alt + @space
+	RiceSelector
+
+# jgmenu
+~button3
+  xqp 0 $(xdo id -N Bspwm -n root) && jgmenu --csv-file=~/.config/punk_records/scripts/menu.txt --config-file=~/.config/punk_records/jgmenurc
+
+# Power off, Reboot, Log out,Lockscreen,Kill an app
+ctrl + super + alt + {p,r,q,l,k}
+	{systemctl poweroff, systemctl reboot,bspc quit,physlock -d,xkill}
+
+# Hide/Show bar
+super + {h,u}
+	HideBar {-h,-u}
+
+# Change transparency on focused window
+ctrl + alt + {plus,minus,t}
+	picom-trans {-c -o +3,-c -o -1,-c -d }
+
+# Random wallpaper
+super + alt + w
+	WallSelect
+
+# Screenshot Now
+Print
+	ScreenShoTer --now
+
+# Screenshot Select
+ctrl + Print
+	ScreenShoTer --sel
+
+# Screenshot in 10s
+alt + Print
+	ScreenShoTer --in10
+        
+# Screenshot active window
+shift + Print
+	ScreenShoTer --active
+
+# Manage brightness (Fn+F11 & Fn+F12)
+XF86MonBrightness{Up,Down}
+    sh Brightness {up,down}
+
+# Volume control (Fn+F3, Fn+F2 & Fn+F1)
+XF86Audio{RaiseVolume,LowerVolume,Mute}
+	Volume{ --inc, --dec, --toggle}
+
+# Music Control
+XF86Audio{Next,Prev,Play,Stop}
+	MediaControl {--next,--previous,--toggle,--stop}	
+
+#|||----- Bspwm hotkeys -----|||#
+        
+# Reload BSPWM
+super + alt + r
+	bspc wm -r
+        
+# Close and kill
+super + {_,shift + }q
+	bspc node -{c,k}
+
+# Reload Keybindings
+super + Escape
+	pkill -USR1 -x sxhkd; dunstify -u low -i ~/.config/bspwm/assets/reload.svg 'sxhkd' 'The configuration file has been reloaded successfully!'
+
+# Switch Tiled and Monocle
+super + m
+	bspc desktop -l next
+
+# Tiled, Pseudo_tiled, Floating, Fullscreen
+super + {t,shift + t,s,f}
+	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
+
+# Set the node flags
+ctrl + alt {m,x,s,p}
+	bspc node -g {marked,locked,sticky,private}
+
+# Hide/Unhide Window
+ctrl + alt + h
+	BspHideNode
+
+# Rotate desktop
+super + r
+	bspc node @/ --rotate {90,-90}
+
+# Circulate the leaves of the tree
+super + c
+	bspc node @/ --circulate {backward,forward}
+
+# Change focus of the Node or Swap Nodes
+super + {_,shift + }{Left,Down,Up,Right}
+	bspc node -{f,s} {west,south,north,east}
+
+# Switch workspace
+super + ctrl + {Left,Right}
+	bspc desktop -f {prev,next}.local
+
+# Focus the last node/desktop
+super + {grave,Tab}
+	bspc {node,desktop} -f last
+
+# Focus or send to the given desktop
+super + ctrl + {_,shift + }{1-9,0}
+	bspc {desktop -f,node -d} '^{1-9,10}'
+	
+# Send focused Node to workspace directionally
+super + ctrl + shift + {Left,Right}
+	bspc node -d {prev,next} '--follow'
+
+# Preselect the direction
+super + ctrl + {h,j,k,l}
+	bspc node -p {west,south,north,east}
+
+# Cancel the preselection for the focused node
+super + ctrl + space
+	bspc node -p cancel
+
+# Cancel the preselection for the focused desktop
+super + ctrl + shift + space
+	bspc query -N -d | xargs -I id -n 1 bspc node id -p cancel
+
+# Expand a window by moving one of its side outward
+super + alt + {Left,Down,Up,Right}
+	bspc node -z {left -10 0,bottom 0 10,top 0 -10,right 10 0}
+
+# Contract a window by moving one of its side inward
+super + alt + shift + {Left,Down,Up,Right}
+	bspc node -z {right -10 0,top 0 10,bottom 0 -10,left 10 0}
+
+# Move a floating window
+alt + shift {Left,Down,Up,Right}
+	bspc node -v {-10 0,0 10,0 -10,10 0}
+
+# Focused desktop window gaps scroll
+super + button{4,5}
+	bspc config -d focused window_gap $((`bspc config -d focused window_gap` {-,+} 5 ))
+
+# Global window gaps scroll
+super + alt + button{4,5}
+	bspc config window_gap $(( $(bspc config window_gap) {-,+} 5 ))
+
+
+
+	
+
+        
+        
