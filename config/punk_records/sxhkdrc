@@ -125,6 +125,10 @@ super + {_,shift + }{Left,Down,Up,Right}
 super + ctrl + {Left,Right}
 	bspc desktop -f {prev,next}.local
 
+# Focus the next/previous node in the current desktop
+alt + {_,shift + }Tab
+	bspc node -f {next,prev}.local
+	
 # Focus the last node/desktop
 super + {grave,Tab}
 	bspc {node,desktop} -f last
@@ -132,7 +136,7 @@ super + {grave,Tab}
 # Focus or send to the given desktop
 super + ctrl + {_,shift + }{1-9,0}
 	bspc {desktop -f,node -d} '^{1-9,10}'
-	
+
 # Send focused Node to workspace directionally
 super + ctrl + shift + {Left,Right}
 	bspc node -d {prev,next} '--follow'
