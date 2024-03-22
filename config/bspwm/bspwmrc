@@ -21,15 +21,17 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 #  ║║║║ ║╠╦╝╠╩╗╚═╗╠═╝╠═╣║  ║╣ ╚═╗
 #  ╚╩╝╚═╝╩╚═╩ ╩╚═╝╩  ╩ ╩╚═╝╚═╝╚═╝
 
-workspaces() {
-	name=1
-	for monitor in `bspc query -M`; do
-		bspc monitor ${monitor} -n "$name" -d '1' '2' '3' '4' '5' '6' '7' '8'
-		let name++
-	done
-}
-
-workspaces
+# change these values according to your system
+# you can use `xrandr -q` to get the names of monitors
+INTERNAL_MONITOR="eDP-1"
+EXTERNAL_MONITOR="HDMI-1"
+if [[ $(xrandr -q | grep "${EXTERNAL_MONITOR} connected") ]]; then
+	bspc monitor "$INTERNAL_MONITOR" -d '1' '2' '3' '4' '5' '6' '7' '8' 
+	bspc monitor "$EXTERNAL_MONITOR" -d '1' '2' '3' '4' '5' '6' '7' '8' 
+	bspc wm -O  "$INTERNAL_MONITOR" "$EXTERNAL_MONITOR"
+else
+	bspc monitor "$INTERNAL_MONITOR" -d '1' '2' '3' '4' '5' '6' '7' '8'
+fi
 
 ########### bspwm conf
 
@@ -91,3 +93,6 @@ pidof -q eww || { eww -c "$HOME"/.config/punk_records/eww daemon & }
 
 # Launch polkit
 pidof -q polkit-gnome-authentication-agent-1 || { /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & }
+
+# Fix cursor
+xsetroot -cursor_name left_ptr
