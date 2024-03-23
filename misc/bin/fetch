@@ -148,8 +148,8 @@ printf "%s%b" "$PADC" "$OUTT"
 printf "\n\n"
 
 # greetings
-printf "%s%b" "$PADC" "          Hello $BLUﮊ $PUR$BLD$name$RST\n"
-printf "%s%b" "$PADC" "    $BLU $GRN$BLD$host$RST $YLWﴱ$RST Ready to F $RED\n"
+printf "%s%b" "$PADC" "          Hello $BLU󰚌 $PUR$BLD$name$RST\n"
+printf "%s%b" "$PADC" "    $BLU $GRN$BLD$host$RST $YLW󰠳$RST Ready to F $RED\n"
 printf "\n\n"
 # environment
 printf "%s%b" "$PADC" "$CYN       distro  $GRY⏹ $RST$distro\n"
