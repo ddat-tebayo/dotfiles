@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+
+dir="$HOME/.config/punk_records"
+rofi_command="rofi -theme $HOME/.config/punk_records/scripts/RiceSelector.rasi"
+
+# Options
+shaka="Shaka  "
+lilith="Lilith 󰠳"
+edison="Edison "
+pythagoras="Pythagoras 󰓌"
+atlas="Atlas 󰒃"
+york="York  "
+vegapunk="Vegapunk  "
+dattebayo="ddat-tebayo "
+options="$shaka\n$lilith\n$edison\n$pythagoras\n$atlas\n$york\n$vegapunk\n$dattebayo"
+
+chosen="$(printf "$options" | $rofi_command -dmenu)"
+	case $chosen in
+			$shaka)
+				cat <<< "shaka" > $dir/.rice
+				bspc wm -r
+				;;
+			$lilith)
+				cat <<< "lilith" > $dir/.rice
+				bspc wm -r
+				;;
+			$edison)
+				cat <<< "edison" > $dir/.rice
+				bspc wm -r
+				;;
+			$pythagoras)
+				cat <<< "pythagoras" > $dir/.rice
+				bspc wm -r
+				;;
+			$atlas)
+				cat <<< "atlas" > $dir/.rice
+				bspc wm -r
+				;;
+			$york)
+				cat <<< "york" > $dir/.rice
+				bspc wm -r
+				;;	
+			$vegapunk)
+				cat <<< "vegapunk" > $dir/.rice
+				bspc wm -r
+				;;			
+            $dattebayo)
+				cat <<< "vegapunk" > $dir/.rice
+				bspc wm -r
+				;;	
+		esac
+	

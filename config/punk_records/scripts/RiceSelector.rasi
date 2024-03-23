@@ -1,0 +1,109 @@
+configuration {
+    show-icons:                 false;
+	drun-display-format:        "{name}";
+	disable-history:                true;
+	sidebar-mode: 					false;
+}
+
+/*****----- Global Properties -----*****/
+* {
+    font:                        "JetBrainsMono Nerd Font Bold 10";
+    background:                  #14171c;
+    background-alt:              #14171cE0;
+    foreground:                  #b8bfe5;
+    selected:                    #81ae5f;
+}
+
+/*****----- Main Window -----*****/
+window {
+    /* properties for window widget */
+    transparency:                "screenshot";
+    location:                    center;
+    anchor:                      center;
+    fullscreen:                  false;
+    width:                       600px;
+    height:                      600px;
+    x-offset:                    0px;
+    y-offset:                    0px;
+    /* properties for all widgets */
+    enabled:                     true;
+    border-radius:               100%;
+    border: 1px solid;
+    border-color: #069183;
+    cursor:                      "default";
+    background-color:            @background;
+}
+
+/*****----- Main Box -----*****/
+mainbox {
+    enabled:                     true;
+    spacing:                     0px;
+    background-color:            transparent;
+    orientation:                 vertical;
+    children:                    [ "mode-switcher", "listbox" ];
+}
+
+listbox {
+    spacing:                     0px;
+    padding:                     35px;
+    background-color:            transparent;
+    orientation:                 vertical;
+    children:                    [ "listview" ];
+}
+
+/*****----- mode-switcher -----*****/
+mode-switcher {
+    enabled:                     true;
+    padding:                     230px 0px 130px;
+    background-color:            transparent;
+    background-image:            url("~/.config/punk_records/assets/j2team.png", width);
+    text-color:                  @foreground;
+    orientation:                 horizontal;
+}
+
+
+
+/*****----- Listview -----*****/
+listview {
+    enabled:                     true;
+    columns:                     2;
+    lines:                       4;
+    cycle:                       false;
+    dynamic:                     false;
+    scrollbar:                   false;
+    layout:                      vertical   ;
+    reverse:                     false;
+    fixed-height:                true;
+    fixed-columns:               true;
+    
+    spacing:                     20px;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      "default";
+}
+
+/*****----- Elements -----*****/
+element {
+    enabled:                     true;
+    spacing:                     10px;
+    padding:                     20px;
+    border-radius:               100%;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      pointer;
+}
+element normal.normal {
+    background-color:            inherit;
+    text-color:                  inherit;
+}
+element selected.normal {
+    background-image: linear-gradient(#1c9ee0, #afa4ec);
+    text-color:                  @background;
+}
+element-text {
+    background-color:            transparent;
+    text-color:                  inherit;
+    cursor:                      inherit;
+    vertical-align:              0.5;
+    horizontal-align:            0.5;
+}
