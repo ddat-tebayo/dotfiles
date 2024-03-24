@@ -19,7 +19,8 @@
 ## MPD clients (eg. ncmpc) also use that location.
 ##
 #
-#lyrics_directory = ~/.lyrics
+lyrics_directory = ~/.config/ncmpcpp/lyrics
+execute_on_song_change  = "MediaControl nccover ; dunstify --replace=27072 -i /tmp/cover.png "Playing.." "$(mpc --format '%title% \n%artist%' current)""
 #
 ##### connection settings #####
 #
@@ -162,7 +163,7 @@ visualizer_color = "33,39,63,75,81,99,117,153,189"
 #
 ## Defines how long messages are supposed to be visible.
 ##
-#message_delay_time = 5
+message_delay_time = 1
 #
 ##### song format #####
 ##
@@ -231,9 +232,9 @@ visualizer_color = "33,39,63,75,81,99,117,153,189"
 ## Note: colors can be nested.
 ##
 #
-#song_list_format = {%a - }{%t}|{$8%f$9}$R{$3%l$9}
+song_list_format = " {%t $R   $8%a$8}|{%f $R   $8%l$8} $8"
 #
-#song_status_format = {{%a{ "%b"{ (%y)}} - }{%t}}|{%f}
+song_status_format = "$b$2󰣐 $7 {$b$6$8 %t $6} $7 $8"
 #
 #song_library_format = {%n - }{%t}|{%f}
 #
@@ -241,18 +242,18 @@ visualizer_color = "33,39,63,75,81,99,117,153,189"
 #
 #alternative_header_second_line_format = {{$4$b%a$/b$9}{ - $7%b$9}{ ($4%y$9)}}|{%D}
 #
-#current_item_prefix = $(yellow)$r
+current_item_prefix = "$b$7$/b$3 "
 #
-#current_item_suffix = $/r$(end)
+current_item_suffix = "  $8"
 #
 #current_item_inactive_column_prefix = $(white)$r
 #
 #current_item_inactive_column_suffix = $/r$(end)
 #
-#now_playing_prefix = $b
+now_playing_prefix = "$b$2$7 "
 #
-#now_playing_suffix = $/b
-#
+now_playing_suffix = "  $/b$8"
+
 #browser_playlist_prefix = "$2playlist$9 "
 #
 #selected_item_prefix = $6
@@ -264,7 +265,7 @@ visualizer_color = "33,39,63,75,81,99,117,153,189"
 ##
 ## Note: attributes are not supported for the following variables.
 ##
-#song_window_title_format = {%a - }{%t}|{%f}
+song_window_title_format = "Now Playing .."
 ##
 ## Note: Below variables are used for sorting songs in browser.  The sort mode
 ## determines how songs are sorted, and can be used in combination with a sort
@@ -311,7 +312,7 @@ visualizer_color = "33,39,63,75,81,99,117,153,189"
 ##   available.
 ##
 #
-#song_columns_list_format = (20)[]{a} (6f)[green]{NE} (50)[white]{t|f:Title} (20)[cyan]{b} (7f)[magenta]{l}
+song_columns_list_format = "(50)[]{t|fr:Title} (0)[magenta]{a}"
 #
 ##### various settings #####
 #
@@ -333,20 +334,20 @@ visualizer_color = "33,39,63,75,81,99,117,153,189"
 #
 #playlist_show_remaining_time = no
 #
-#playlist_shorten_total_times = no
+playlist_shorten_total_times = "yes"
 #
 #playlist_separate_albums = no
 #
 ##
 ## Note: Possible display modes: classic, columns.
 ##
-#playlist_display_mode = columns
+playlist_display_mode = columns
 #
-#browser_display_mode = classic
+browser_display_mode = columns
 #
 #search_engine_display_mode = classic
 #
-#playlist_editor_display_mode = classic
+playlist_editor_display_mode = columns
 #
 #discard_colors_if_item_is_selected = yes
 #
@@ -358,9 +359,9 @@ visualizer_color = "33,39,63,75,81,99,117,153,189"
 #
 #volume_change_step = 2
 #
-#autocenter_mode = no
+autocenter_mode = yes
 #
-#centered_cursor = no
+centered_cursor = yes
 #
 ##
 ## Note: You can specify third character which will be used to build 'empty'
@@ -374,7 +375,7 @@ progressbar_look = "━━╸"
 #
 ## Available values: classic, alternative.
 ##
-#user_interface = classic
+user_interface = classic
 #
 #data_fetching_delay = yes
 #
@@ -392,22 +393,22 @@ progressbar_look = "━━╸"
 #
 #default_tag_editor_pattern = %n - %t
 #
-#header_visibility = yes
+header_visibility = "no"
 #
-statusbar_visibility = no
+statusbar_visibility = "yes"
 #
 ## Show the "Connected to ..." message on startup
-#connected_message_on_startup = yes
+connected_message_on_startup = yes
 #
-#titles_visibility = yes
+titles_visibility = "yes"
 #
 #header_text_scrolling = yes
 #
-#cyclic_scrolling = no
+cyclic_scrolling = yes
 #
 #lyrics_fetchers = azlyrics, genius, musixmatch, sing365, metrolyrics, justsomelyrics, jahlyrics, plyrics, tekstowo, zeneszoveg, internet
 #
-#follow_now_playing_lyrics = no
+follow_now_playing_lyrics = yes
 #
 #fetch_lyrics_for_current_song_in_background = no
 #
@@ -445,7 +446,7 @@ statusbar_visibility = no
 ##
 ## Note: You can define startup screen by choosing screen from the list above.
 ##
-#startup_screen = playlist
+startup_screen = playlist
 #
 ##
 ## Note: You can define startup slave screen by choosing screen from the list
@@ -459,9 +460,9 @@ statusbar_visibility = no
 ## Default width of locked screen (in %).  Acceptable values are from 20 to 80.
 ##
 #
-#locked_screen_width_part = 50
+locked_screen_width_part = 50
 #
-#ask_for_locked_screen_width_part = yes
+ask_for_locked_screen_width_part = yes
 #
 #jump_to_now_playing_song_at_start = yes
 #
@@ -471,7 +472,7 @@ statusbar_visibility = no
 #
 #display_volume_level = yes
 #
-#display_bitrate = no
+display_bitrate = no
 #
 #display_remaining_time = no
 #
@@ -494,11 +495,11 @@ statusbar_visibility = no
 #
 #block_search_constraints_change_if_items_found = yes
 #
-#mouse_support = yes
+mouse_support = "no"
 #
-#mouse_list_scroll_whole_page = no
+mouse_list_scroll_whole_page = "yes"
 #
-#lines_scrolled = 5
+lines_scrolled = 1
 #
 #empty_tag_marker = <empty>
 #
@@ -508,7 +509,7 @@ statusbar_visibility = no
 #
 #media_library_sort_by_mtime = no
 #
-#enable_window_title = yes
+enable_window_title = "yes"
 #
 ##
 ## Note: You can choose default search mode for search engine. Available modes
@@ -526,7 +527,7 @@ statusbar_visibility = no
 #
 #search_engine_default_search_mode = 1
 #
-#external_editor = nano
+external_editor = nano
 #
 ## Note: set to yes if external editor is a console application.
 ##
@@ -574,17 +575,17 @@ colors_enabled = yes
 #
 #state_flags_color = default:b
 #
-#main_window_color = yellow
+main_window_color = default
 #
-#color1 = white
+color1 = white
+
+color2 = blue
 #
-#color2 = green
+progressbar_color = "black"
 #
-#progressbar_color = black:b
+progressbar_elapsed_color = "magenta"
 #
-#progressbar_elapsed_color = green:b
-#
-#statusbar_color = default
+statusbar_color = "white"
 #
 #statusbar_time_color = default:b
 #
