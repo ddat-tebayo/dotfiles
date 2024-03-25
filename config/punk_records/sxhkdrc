@@ -12,14 +12,9 @@ super + alt + Return
 super + @space
 	OpenApps --menu
 
-# Firefox, Ranger, Nvim, Spotify 
-shift + alt + {b,f,v,m}
-       {
-	    firefox, \
-        alacritty -t ranger -e ranger, \
-        alacritty -t neovim -e nvim, \
-        env LD_PRELOAD=/usr/lib/spotify-adblock.so spotify --disable-gpu --no-zygote %U
-		}
+# Firefox, Ranger, Neovide, Ncmpcpp 
+shift + alt + {f,r,n,m}
+		OpenApps {--browser, --ranger, --neovide, --music}
 
 #|||----- System Keybindings -----|||#
 
@@ -33,7 +28,7 @@ alt + @space
 
 # jgmenu
 ~button3
-  xqp 0 $(xdo id -N Bspwm -n root) && jgmenu --csv-file=~/.config/punk_records/scripts/menu.txt --config-file=~/.config/punk_records/jgmenurc
+  xqp 0 $(xdo id -N Bspwm -n root) && jgmenu --csv-file=~/.config/punk_records/scripts/menu.csv --config-file=~/.config/punk_records/jgmenurc
 
 # Power off, Reboot, Log out,Lockscreen,Kill an app
 ctrl + super + alt + {p,r,q,l,k}
@@ -91,7 +86,7 @@ super + {_,shift + }q
 
 # Reload Keybindings
 super + Escape
-	pkill -USR1 -x sxhkd; dunstify -u low -i ~/.config/bspwm/assets/reload.svg 'sxhkd' 'The configuration file has been reloaded successfully!'
+	pkill -USR1 -x sxhkd; dunstify -u low -i ~/.config/punk_records/assets/reload.svg 'sxhkd' 'The configuration file has been reloaded successfully!'
 
 # Switch Tiled and Monocle
 super + m
