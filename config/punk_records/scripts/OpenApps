@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+#   █████╗ ██████╗ ██████╗ ███████╗    ██╗      █████╗ ██╗   ██╗███╗   ██╗ ██████╗██╗  ██╗███████╗██████╗
+#  ██╔══██╗██╔══██╗██╔══██╗██╔════╝    ██║     ██╔══██╗██║   ██║████╗  ██║██╔════╝██║  ██║██╔════╝██╔══██╗
+#  ███████║██████╔╝██████╔╝███████╗    ██║     ███████║██║   ██║██╔██╗ ██║██║     ███████║█████╗  ██████╔╝
+#  ██╔══██║██╔═══╝ ██╔═══╝ ╚════██║    ██║     ██╔══██║██║   ██║██║╚██╗██║██║     ██╔══██║██╔══╝  ██╔══██╗
+#  ██║  ██║██║     ██║     ███████║    ███████╗██║  ██║╚██████╔╝██║ ╚████║╚██████╗██║  ██║███████╗██║  ██║
+#  ╚═╝  ╚═╝╚═╝     ╚═╝     ╚══════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+# Script to control prefered apps to launch for all themes
+# Author: z0mbi3
+# url:    https://github.com/gh0stzk
+
+WIDGET_DIR="$HOME/.config/eww"
+
+case "$1" in
+    --menu)
+        rofi -show drun -theme "$HOME"/.config/rofi/Launcher.rasi
+        ;;
+    --themes)
+        RiceSelector
+        ;;
+    --wallpapers)
+        WallSelect
+        ;;
+    --terminal)
+        alacritty
+        ;;
+    --floating)
+        alacritty --class FloaTerm,FloaTerm -o window.dimensions.lines=22 window.dimensions.columns=90
+        ;;
+    --update)
+        alacritty --hold --class FloaTerm,FloaTerm -o window.dimensions.lines=22 window.dimensions.columns=90 -e Updates --update-system
+        ;;
+    --checkupdates)
+        alacritty --hold --class Updating,Updating -o window.dimensions.lines=22 window.dimensions.columns=47 -e Updates --print-updates
+        ;;
+    --ranger)
+        alacritty --class FloaTerm,FloaTerm -o window.dimensions.lines=14 window.dimensions.columns=90 -e ranger
+        ;;
+    --neovide)
+        neovide
+        ;;
+    --editor)
+        code
+        ;;
+    --music)
+        alacritty --class FloaTerm,FloaTerm -o window.dimensions.lines=18 window.dimensions.columns=67 -e ncmpcpp
+        ;;
+    --fetch)
+        alacritty --hold --class fetch -e ~/.local/bin/fetch
+        ;;
+        # Apps
+    --filemnager)
+        Thunar
+        ;;
+    --cool-term)
+        sh -c "cool-retro-term -T Vintage-Terminal --profile Vintage --fullscreen"
+        ;;
+    --browser)
+        firefox
+        ;;
+    --telegram)
+        telegram-desktop
+        ;;
+    --whats)
+        whatsapp-nativefier --disable-gpu
+        ;;
+    --soundcontrol)
+        pavucontrol
+        ;;
+        # Eww Widgets
+    --powermenu)
+        eww -c "$WIDGET_DIR" open --toggle powermenu
+        ;;
+    --usercard)
+        eww -c "$WIDGET_DIR" open --toggle launchermenu
+        ;;
+    --player)
+        eww -c "$WIDGET_DIR" open --toggle music
+        ;;
+    --calendar)
+        eww -c "$WIDGET_DIR" open --toggle date
+        ;;
+    --showcase)
+        OpenApps --usercard && OpenApps --powermenu && OpenApps --player && OpenApps --calendar
+        ;;
+    *)
+        echo "Invalid Option"
+        ;;
+esac

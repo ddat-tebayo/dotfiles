@@ -1,0 +1,52 @@
+Terminal,OpenApps --floating,terminal
+Web Browser,OpenApps --browser,firefox
+File Manager,OpenApps --filemnager,org.xfce.thunar
+
+^sep()
+
+Favorites,^checkout(favorites),starred
+
+^sep()
+
+Showcase,^checkout(showcase),penguin
+Change Theme,OpenApps --themes,colors
+Select Wallpaper, OpenApps --wallpapers,phototonic
+
+^sep()
+
+Widgets,^checkout(wg),kmenuedit
+BSPWM,^checkout(wm),gnome-windows
+
+^sep()
+
+Exit,^checkout(exit),system-shutdown
+
+^tag(favorites)
+Visual Studio Code,OpenApps --editor,vscode
+Neovide,OpenApps --neovide,nvim
+Blender, blender,blender
+^sep()
+Spotify, spotify, spotify
+Discord, discord,discord
+OBS,obs,com.obsproject.Studio
+
+^tag(showcase)
+Fetch, OpenApps --fetch,/home/TienDat/.config/punk_records/assets/dattebayo.svg
+Eww, OpenApps --showcase,distributor-logo-archlinux
+Cool Terminal, OpenApps --cool-term,cool-retro-term
+
+^tag(wg)
+User Card,OpenApps --usercard,system-users
+Music Player,OpenApps --player,musique
+Power Menu,OpenApps --powermenu,changes-allow
+Calendar,OpenApps --calendar,office-calendar
+
+^tag(wm)
+Keybinds,KeybindingsHelp,preferences-desktop-keyboard-shortcuts
+Restart WM,bspc wm -r,system-reboot
+Quit,bspc quit,system-log-out
+
+^tag(exit)
+Block computer,physlock -d,changes-prevent
+Reboot,systemctl reboot,system-reboot
+Shutdown,systemctl poweroff,system-shutdown
