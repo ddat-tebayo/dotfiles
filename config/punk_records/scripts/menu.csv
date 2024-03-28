@@ -1,6 +1,6 @@
 Terminal,OpenApps --floating,terminal
 Web Browser,OpenApps --browser,firefox
-File Manager,OpenApps --filemnager,org.xfce.thunar
+File Manager,OpenApps --filemanager,org.xfce.thunar
 
 ^sep()
 

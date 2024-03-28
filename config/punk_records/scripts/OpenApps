@@ -33,6 +33,9 @@ case "$1" in
     --checkupdates)
         alacritty --hold --class Updating,Updating -o window.dimensions.lines=22 window.dimensions.columns=47 -e Updates --print-updates
         ;;
+    --netmanager)
+        NetManagerDM
+        ;;
     --ranger)
         alacritty --class FloaTerm,FloaTerm -o window.dimensions.lines=14 window.dimensions.columns=90 -e ranger
         ;;
@@ -49,7 +52,7 @@ case "$1" in
         alacritty --hold --class fetch -e ~/.local/bin/fetch
         ;;
         # Apps
-    --filemnager)
+    --filemanager)
         Thunar
         ;;
     --cool-term)
