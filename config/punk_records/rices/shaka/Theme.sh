@@ -9,9 +9,9 @@ set_bspwm_config() {
     bspc config bottom_padding 0
     bspc config left_padding 2
     bspc config right_padding 2
-    bspc config normal_border_color "#C574DD"
-    bspc config active_border_color "#C574DD"
-    bspc config focused_border_color "#8897F4"
+    bspc config normal_border_color "#8897F4"
+    bspc config active_border_color "#8897F4"
+    bspc config focused_border_color "#C574DD"
     bspc config presel_feedback_color "#FF4971"
 }
 
@@ -27,7 +27,7 @@ foreground = "#FDFDFD"
 
 # Cursor colors
 [colors.cursor]
-cursor = "#FF4971"
+cursor = "#8897F4"
 text = "#1D1F28"
 
 # Normal colors
@@ -54,7 +54,6 @@ yellow = "#FF8037"
 EOF
 }
 
-
 # Set dunst notification daemon config
 set_dunst_config() {
     sed -i "$HOME"/.config/punk_records/dunstrc \
@@ -66,20 +65,20 @@ set_dunst_config() {
 
     sed -i '/urgency_low/Q' "$HOME"/.config/punk_records/dunstrc
     cat >> "$HOME"/.config/punk_records/dunstrc <<- _EOF_
-			[urgency_low]
-			timeout = 3
-			background = "#1D1F28"
-			foreground = "#FDFDFD"
+        [urgency_low]
+        timeout = 3
+        background = "#1D1F28"
+        foreground = "#FDFDFD"
 
-			[urgency_normal]
-			timeout = 6
-			background = "#1D1F28"
-			foreground = "#FDFDFD"
+        [urgency_normal]
+        timeout = 6
+        background = "#1D1F28"
+        foreground = "#FDFDFD"
 
-			[urgency_critical]
-			timeout = 0
-			background = "#1D1F28"
-			foreground = "#FDFDFD"
+        [urgency_critical]
+        timeout = 0
+        background = "#1D1F28"
+        foreground = "#FDFDFD"
 _EOF_
 }
 
