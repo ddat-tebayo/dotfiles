@@ -5,7 +5,7 @@ poly_dir="$HOME/.config/polybar/$RICETHEME"
 # Set bspwm configuration for Shaka
 set_bspwm_config() {
     bspc config border_width 0
-    bspc config top_padding 30
+    bspc config top_padding 45
     bspc config bottom_padding 0
     bspc config left_padding 2
     bspc config right_padding 2
