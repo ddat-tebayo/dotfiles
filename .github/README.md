@@ -16,19 +16,20 @@
 
 ## 🌿 Information
 
-<img src="assets/fetch.png" alt="Linux Fetch" align="right" width="450">
+<img src="assets/fetch.webp" alt="Linux Fetch" align="right" width="450">
 
-|Distro|[Arch](https://archlinux.org/)|
+|Feature|Package|
 |:---:|:---:|
-|WM|[bspwm](https://github.com/baskerville/bspwm)|
+|Window Manager|[bspwm](https://github.com/baskerville/bspwm)|
 |Bar|[polybar](https://github.com/polybar/polybar)|
 |Shell|[zsh](https://archlinux.org/packages/extra/x86_64/zsh/)|
 |Editor|[neovim](https://github.com/neovim/neovim)| 
-|Menu|[rofi](https://github.com/davatorium/rofi)|
+|Application Launcher|[rofi](https://github.com/davatorium/rofi)|
+|Application Menu|[jgmenu](https://github.com/jgmenu/jgmenu)|
 |Compositor|[picom](https://archlinux.org/packages/community/x86_64/picom/)|
 |Terminal|[alacritty](https://github.com/alacritty/alacritty)|
 |Widgets|[ElKowars wacky widgets ](https://github.com/elkowar/eww)|
-|Music/Player|[mpd](https://archlinux.org/packages/extra/x86_64/mpd/)-[ncmpcpp](https://archlinux.org/packages/community/x86_64/ncmpcpp/)|
+|Music/Player|[mpd ](https://archlinux.org/packages/extra/x86_64/mpd/)-[ ncmpcpp](https://archlinux.org/packages/community/x86_64/ncmpcpp/)|
 |File Manager|[ranger](https://archlinux.org/packages/extra/x86_64/thunar/)|
 
 <br>
@@ -44,9 +45,50 @@
       
       
       
-     THIS DOTFILES ARE CONFIGURED AT 1366x768 WITH 96 DPI! 1 MONITOR
-     SOME STUFF MIGHT BREAK ON LOWER OR HIGHER
-     RESOLUTIONS BUT WILL STILL WORK!
+     This dotfiles are configured at 1366x768 resolution with 96 DPI. Some stuff might break on lower or higher resolutions, but still work!!
      
    </tr>
 </table>
+
+## 📷 Showcase
+
+
+<details>
+<summary><b> 👕 Theme Selector </b></summary>
+
+![Theme Selector](assets/ThemeSelector.webp)
+![Theme Selector](assets/ThemeSelector.gif)
+</details>
+
+<details>
+<summary><b> 👾 Application Launcher </b></summary>
+
+![Application Launcher](assets/ApplicationLauncher.webp)
+![Application Launcher](assets/ApplicationLauncher.gif)
+</details>
+
+<details>
+<summary><b> ⚓ Application Menu  </b></summary>
+
+![Application Launcher](assets/ApplicationMenu.webp)
+![Application Launcher](assets/ApplicationMenu.gif)
+</details>
+
+<details>
+<summary><b> 🌾 Rice Themes </b></summary>
+
+   #### 🎨 Shaka
+   #### 🎨 Lilith
+   #### 🎨 Edison
+   #### 🎨 Pythagoras
+   #### 🎨 Atlas
+   #### 🎨 York
+   #### 🎨 Vegapunk
+   #### 🎨 ddat-tebayo
+   
+</details>
+
+
+## ✨ Credits
+- [gh0stzk](https://github.com/gh0stzk/) - The world of limitless customization with gh0stzk's dotfiles (a unique and exciting experience with 15 different themes, each featuring captivating color schemes, styles and personality.)
+- [KidP2H](https://github.com/kidp2h/) - Beautiful theme with transparent-glassy-vibrant elements.
