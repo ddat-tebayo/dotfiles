@@ -17,8 +17,20 @@ set_bspwm_config() {
 
 # Reload terminal colors
 set_term_config() {
+    cat > "$HOME"/.config/alacritty/fonts.toml << EOF
+[font]
+size = 10
+
+builtin_box_drawing = true
+
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+bold = { family = "JetBrainsMono Nerd Font", style = "Bold" }
+italic = { family = "JetBrainsMono Nerd Font", style = "Italic" }
+bold_italic = { family = "JetBrainsMono Nerd Font", style = "Bold Italic" }
+EOF
+
     cat > "$HOME"/.config/alacritty/rice-colors.toml << EOF
-# Color scheme for Shaka Rice
+# Color scheme for Edison Rice
 
 # Default colors
 [colors.primary]
@@ -85,7 +97,7 @@ _EOF_
 # Set eww colors
 set_eww_colors() {
     cat > "$HOME"/.config/punk_records/eww/colors.scss << EOF
-// Eww colors for Pamela rice
+// Eww colors for Edison rice
 \$bg: #14171c;
 \$bg-alt: #181b21;
 \$fg: #b8bfe5;
@@ -101,7 +113,7 @@ set_eww_colors() {
 EOF
 }
 
-# Set jgmenu colors for Pamela
+# Set jgmenu colors for Edison
 set_jgmenu_colors() {
     sed -i "$HOME"/.config/punk_records/jgmenurc \
 		-e 's/color_menu_bg = .*/color_menu_bg = #14171c/' \
