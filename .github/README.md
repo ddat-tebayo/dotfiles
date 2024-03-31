@@ -16,16 +16,16 @@
 
 ## 🌿 Information
 
-<img src="assets/fetch.webp" alt="Linux Fetch" align="right" width="450">
+<img src="assets/fetch.webp" alt="Linux Fetch" align="right" width="445">
 
 |Feature|Package|
 |:---:|:---:|
-|Window Manager|[bspwm](https://github.com/baskerville/bspwm)|
+|WM|[bspwm](https://github.com/baskerville/bspwm)|
 |Bar|[polybar](https://github.com/polybar/polybar)|
 |Shell|[zsh](https://archlinux.org/packages/extra/x86_64/zsh/)|
 |Editor|[neovim](https://github.com/neovim/neovim)| 
-|Application Launcher|[rofi](https://github.com/davatorium/rofi)|
-|Application Menu|[jgmenu](https://github.com/jgmenu/jgmenu)|
+|App Launcher|[rofi](https://github.com/davatorium/rofi)|
+|App Menu|[jgmenu](https://github.com/jgmenu/jgmenu)|
 |Compositor|[picom](https://archlinux.org/packages/community/x86_64/picom/)|
 |Terminal|[alacritty](https://github.com/alacritty/alacritty)|
 |Widgets|[ElKowars wacky widgets ](https://github.com/elkowar/eww)|
@@ -45,7 +45,8 @@
       
       
       
-     This dotfiles are configured at 1366x768 resolution with 96 DPI. Some stuff might break on lower or higher resolutions, but still work!!
+     This dotfiles are configured at 1366x768 resolution with 96 DPI. 
+     Some stuff might break on lower or higher resolutions, but still work!!
      
    </tr>
 </table>
@@ -85,9 +86,8 @@
    #### 🎨 York
    #### 🎨 Vegapunk
    #### 🎨 ddat-tebayo
-   
-</details>
 
+</details>
 
 ## ✨ Credits
 - [gh0stzk](https://github.com/gh0stzk/) - The world of limitless customization with gh0stzk's dotfiles (a unique and exciting experience with 15 different themes, each featuring captivating color schemes, styles and personality.)
