@@ -96,7 +96,7 @@ _EOF_
 
 # Set eww colors
 set_eww_colors() {
-    cat > "$HOME"/.config/punk_records/eww/colors.scss << EOF
+    cat > "$HOME"/.config/eww/colors.scss << EOF
 // Eww colors for Edison rice
 \$bg: #14171c;
 \$bg-alt: #181b21;
