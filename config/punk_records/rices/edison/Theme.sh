@@ -126,7 +126,7 @@ set_jgmenu_colors() {
 
 # Set Rofi launcher config
 set_launcher_config () {
-    sed -i "$HOME/.config/punk_records/scripts/Launcher.rasi" \
+    sed -i "$HOME/.config/rofi/Launcher.rasi" \
 		-e '22s/\(font: \).*/\1"Terminess Nerd Font Mono Bold 10";/' \
 		-e 's/\(background: \).*/\1#14171c;/' \
 		-e 's/\(background-alt: \).*/\1#14171cE0;/' \
@@ -134,7 +134,7 @@ set_launcher_config () {
 		-e 's/\(selected: \).*/\1#8677cf;/' \
 
     # WallSelect menu colors
-    sed -i "$HOME/.config/punk_records/scripts/WallSelect.rasi" \
+    sed -i "$HOME/.config/rofi/WallSelect.rasi" \
         -e 's/\(main-bg: \).*/\1#1D1F28BF;/' \
         -e 's/\(main-fg: \).*/\1#c0caf5;/' \
         -e 's/\(select-bg: \).*/\1#6C77BB;/' \
