@@ -1,6 +1,33 @@
 #!/usr/bin/env bash
 
-SFILE="$HOME/.config/punk_records/scripts/.sys"
+SFILE="$HOME/.config/punk_records/scripts/system.ini"
+
+if [[ ! -f "$SFILE" ]]; then
+	touch "$SFILE"
+	chmod a+rwx "$SFILE"
+	cat > $SFILE << EOF
+;  ╔═╗╦ ╦╔═╗╔╦╗╔═╗╔╦╗  ╦  ╦╔═╗╦═╗╦╔═╗╔╗ ╦  ╔═╗╔═╗
+;  ╚═╗╚╦╝╚═╗ ║ ║╣ ║║║  ╚╗╔╝╠═╣╠╦╝║╠═╣╠╩╗║  ║╣ ╚═╗
+;  ╚═╝ ╩ ╚═╝ ╩ ╚═╝╩ ╩   ╚╝ ╩ ╩╩╚═╩╩ ╩╚═╝╩═╝╚═╝╚═╝
+; The variables for the polybar modules are taken from this file.
+
+;; Edit according to your system
+;; Run "ls -1 /sys/class/power_supply/" to list list adapters and batteries.
+;; Run "ls -1 /sys/class/backlight/" to list available graphics cards.
+;; Run "ip link | awk '/state UP/ {print $2}' | tr -d :" to get active network interface.
+;; Run "xrandr | grep "connected primary" | awk '{print $1}'" to get the name of the currently connected primary monitor.
+;; Run "xrandr | grep "connected" | grep -v "primary" | awk '{print $1}'" to get the name of the external monitor.
+
+[system]
+sys_adapter = 
+sys_battery = 
+sys_graphics_card = 
+sys_network_interface = 
+internal_monitor = 
+external_monitor = 
+EOF
+
+fi
 
 function get_values() {
 
@@ -21,7 +48,8 @@ function get_values() {
 
 	BATTERY="$battery_file"
 	ADAPTER="$adapter_file"
-
+	INTERNAL_MONITOR=$(xrandr | grep "connected primary" | awk '{print $1}')
+	EXTERNAL_MONITOR=$(xrandr | grep "connected" | grep -v "primary" | awk '{print $1}')
 }
 
 function set_values() {
@@ -38,11 +66,13 @@ function set_values() {
 	if [[ "$CARD" ]]; then
 		sed -i -e "s/sys_graphics_card = .*/sys_graphics_card = $CARD/g" $HOME/.config/punk_records/scripts/system.ini
 	fi
-
+	if [[ "$INTERNAL_MONITOR" ]]; then
+		sed -i -e "s/internal_monitor = .*/internal_monitor = $INTERNAL_MONITOR/g" $HOME/.config/punk_records/scripts/system.ini
+	fi
+	if [[ "$EXTERNAL_MONITOR" ]]; then
+		sed -i -e "s/external_monitor = .*/external_monitor = $EXTERNAL_MONITOR/g" $HOME/.config/punk_records/scripts/system.ini
+	fi
 }
 
-if [[ ! -f "$SFILE" ]]; then
-	get_values
-	set_values
-	touch "$SFILE"
-fi
+get_values
+set_values
