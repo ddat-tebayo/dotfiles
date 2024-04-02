@@ -69,28 +69,28 @@ EOF
 # Set dunst notification daemon config
 set_dunst_config() {
     sed -i "$HOME"/.config/punk_records/dunstrc \
-		-e "s/transparency = .*/transparency = 8/g" \
-		-e "s/frame_color = .*/frame_color = \"#070219\"/g" \
-		-e "s/separator_color = .*/separator_color = \"#fb007a\"/g" \
+		-e "s/transparency = .*/transparency = 9/g" \
+		-e "s/frame_color = .*/frame_color = \"#1D1F28\"/g" \
+		-e "s/separator_color = .*/separator_color = \"#8897F4\"/g" \
 		-e "s/font = .*/font = JetBrainsMono NF Medium 9/g" \
-		-e "s/foreground='.*'/foreground='#27fbfe'/g"
+		-e "s/foreground='.*'/foreground='#79E6F3'/g"
 
     sed -i '/urgency_low/Q' "$HOME"/.config/punk_records/dunstrc
     cat >> "$HOME"/.config/punk_records/dunstrc <<- _EOF_
         [urgency_low]
-		timeout = 3
-		background = "#070219"
-		foreground = "#27fbfe"
+        timeout = 3
+        background = "#1D1F28"
+        foreground = "#FDFDFD"
 
-		[urgency_normal]
-		timeout = 6
-		background = "#070219"
-		foreground = "#27fbfe"
+        [urgency_normal]
+        timeout = 6
+        background = "#1D1F28"
+        foreground = "#FDFDFD"
 
-		[urgency_critical]
-		timeout = 0
-		background = "#070219"
-		foreground = "#27fbfe"
+        [urgency_critical]
+        timeout = 0
+        background = "#1D1F28"
+        foreground = "#FDFDFD"
 _EOF_
 }
 
