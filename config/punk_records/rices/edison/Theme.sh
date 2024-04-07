@@ -17,6 +17,9 @@ set_bspwm_config() {
 
 # Reload terminal colors
 set_term_config() {
+    sed -i "$HOME"/.config/alacritty/alacritty.toml \
+        -e "s/opacity = .*/opacity = 0.8/g" \
+
     cat > "$HOME"/.config/alacritty/fonts.toml << EOF
 [font]
 size = 10

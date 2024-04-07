@@ -2,43 +2,43 @@
 
 poly_dir="$HOME/.config/polybar/$RICETHEME"
 
-# Set bspwm configuration for Shaka
+# Set bspwm configuration for dattebayo
 set_bspwm_config() {
     bspc config border_width 0
-    bspc config top_padding 45
-    bspc config bottom_padding 0
+    bspc config top_padding 30
+    bspc config bottom_padding 30
     bspc config left_padding 2
     bspc config right_padding 2
-    bspc config normal_border_color "#8897F4"
-    bspc config active_border_color "#8897F4"
-    bspc config focused_border_color "#C574DD"
-    bspc config presel_feedback_color "#FF4971"
+    bspc config normal_border_color "#1d1f28"
+    bspc config active_border_color "#ff4c30"
+    bspc config focused_border_color "#ff4c30"
+    bspc config presel_feedback_color "#5adecd"
 }
 
 # Reload terminal colors
 set_term_config() {
     sed -i "$HOME"/.config/alacritty/alacritty.toml \
-        -e "s/opacity = .*/opacity = 1.0/g" \
+        -e "s/opacity = .*/opacity = 0.6/g" \
 
     cat > "$HOME"/.config/alacritty/fonts.toml << EOF
 [font]
-size = 10
+size = 11
 
 builtin_box_drawing = true
 
-normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
-bold = { family = "JetBrainsMono Nerd Font", style = "Bold" }
-italic = { family = "JetBrainsMono Nerd Font", style = "Italic" }
-bold_italic = { family = "JetBrainsMono Nerd Font", style = "Bold Italic" }
+normal = { family = "ComicShannsMono Nerd Font", style = "Regular" }
+bold = { family = "ComicShannsMono Nerd Font", style = "Bold" }
+italic = { family = "ComicShannsMono Nerd Font", style = "Italic" }
+bold_italic = { family = "ComicShannsMono Nerd Font", style = "Bold Italic" }
 EOF
 
     cat > "$HOME"/.config/alacritty/rice-colors.toml << EOF
-# Color scheme for Shaka Rice
+# Color scheme for ddat-tebayo Rice
 
 # Default colors
 [colors.primary]
-background = "#1D1F28"
-foreground = "#FDFDFD"
+background = "#282A36"
+foreground = "#F8F8F2"
 
 # Cursor colors
 [colors.cursor]
@@ -47,25 +47,25 @@ text = "#1D1F28"
 
 # Normal colors
 [colors.normal]
-black = "#3D4C5F"
-blue = "#8897F4"
-cyan = "#79E6F3"
-green = "#5ADECD"
-magenta = "#C574DD"
-red = "#F37F97"
-white = "#FDFDFD"
-yellow = "#F2A272"
+black = "#3C3E4A"
+blue = "#BD93F9"
+cyan = "#8BE9FD"
+green = "#50FA7B"
+magenta = "#FF79C6"
+red = "#FF5555"
+white = "#BFBFBF"
+yellow = "#F1FA8C"
 
 # Bright colors
 [colors.bright]
-black = "#56687E"
-blue = "#556FFF"
-cyan = "#3FDCEE"
-green = "#18E3C8"
-magenta = "#B043D1"
-red = "#FF4971"
-white = "#BEBEC1"
-yellow = "#FF8037"
+black = "#4D4D4D"
+blue = "#CAA9FA"
+cyan = "#9AEDFE"
+green = "#5AF78E"
+magenta = "#FF92D0"
+red = "#FF6E67"
+white = "#E6E6E6"
+yellow = "#F4F99D"
 EOF
 }
 
@@ -75,7 +75,7 @@ set_dunst_config() {
         -e "s/transparency = .*/transparency = 9/g" \
         -e "s/frame_color = .*/frame_color = \"#1D1F28\"/g" \
         -e "s/separator_color = .*/separator_color = \"#8897F4\"/g" \
-        -e "s/font = .*/font = JetBrainsMono NF Medium 9/g" \
+        -e "s/font = .*/font = ComicShannsMono Nerd Font 9/g" \
         -e "s/foreground='.*'/foreground='#79E6F3'/g"
 
     sed -i '/urgency_low/Q' "$HOME"/.config/punk_records/dunstrc
@@ -147,12 +147,9 @@ set_launcher_config () {
 launch_bars() {
 
     for mon in $(polybar --list-monitors | cut -d":" -f1); do
-        (MONITOR=$mon polybar -q shaka1 -c "${poly_dir}"/config.ini)&
-        (MONITOR=$mon polybar -q shaka2 -c "${poly_dir}"/config.ini)&
-        (MONITOR=$mon polybar -q shaka3 -c "${poly_dir}"/config.ini)&
-        (MONITOR=$mon polybar -q shaka4 -c "${poly_dir}"/config.ini)&
-        (MONITOR=$mon polybar -q shaka5 -c "${poly_dir}"/config.ini)&
-        (MONITOR=$mon polybar -q shaka6 -c "${poly_dir}"/config.ini)&
+        (MONITOR=$mon polybar -q dat-1 -c "${poly_dir}"/config.ini)&
+        (MONITOR=$mon polybar -q dat-2 -c "${poly_dir}"/config.ini)&
+        (MONITOR=$mon polybar -q dat-3 -c "${poly_dir}"/config.ini)&
     done
 
 }
