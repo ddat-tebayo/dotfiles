@@ -53,6 +53,9 @@
 
 ## 📷 Showcase
 
+| 🌾 Rices |
+|:-:|
+![btop-ttyclock-cava-fetch](./assets/btop-ttyclock-cava-fetch.webp)
 
 <details>
 <summary><b> 👕 Theme Selector </b></summary>
@@ -76,16 +79,39 @@
 </details>
 
 <details>
-<summary><b> 🌾 Rice Themes </b></summary>
+<summary><b> 🚥 Polybar / Eww </b></summary>
 
-   #### 🎨 Shaka
-   #### 🎨 Lilith
-   #### 🎨 Edison
-   #### 🎨 Pythagoras
-   #### 🎨 Atlas
-   #### 🎨 York
-   #### 🎨 Vegapunk
-   #### 🎨 ddat-tebayo
+| 🎨 Shaka |
+|:-:|
+|![Shaka](./assets/shaka.webp)|
+
+| 🎨 Lilith |
+|:-:|
+|![Lilith](./assets/lilith.webp)|
+
+| 🎨 Edison |
+|:-:|
+|![Edison](./assets/edison.webp)|
+
+| 🎨 Pythagoras |
+|:-:|
+|![Pythagoras](./assets/pythagoras.webp)|
+
+| 🎨 Atlas |
+|:-:|
+|![Atlas](./assets/atlas.webp)|
+
+| 🎨 York |
+|:-:|
+|![York](./assets/york.webp)|
+
+| 🎨 Vegapunk |
+|:-:|
+|![Vegapunk](./assets/vegapunk.webp)|
+
+| 🎨 ddat-tebayo |
+|:-:|
+|![dattebayo](./assets/dattebayo.webp)|
 
 </details>
 
