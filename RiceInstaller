@@ -1,1 +1,324 @@
 #!/usr/bin/env bash
+#  ██████╗ ██╗ ██████╗███████╗    ██╗███╗   ██╗███████╗████████╗ █████╗ ██╗     ██╗     ███████╗██████╗
+#  ██╔══██╗██║██╔════╝██╔════╝    ██║████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██║     ██║     ██╔════╝██╔══██╗
+#  ██████╔╝██║██║     █████╗      ██║██╔██╗ ██║███████╗   ██║   ███████║██║     ██║     █████╗  ██████╔╝
+#  ██╔══██╗██║██║     ██╔══╝      ██║██║╚██╗██║╚════██║   ██║   ██╔══██║██║     ██║     ██╔══╝  ██╔══██╗
+#  ██║  ██║██║╚██████╗███████╗    ██║██║ ╚████║███████║   ██║   ██║  ██║███████╗███████╗███████╗██║  ██║
+#  ╚═╝  ╚═╝╚═╝ ╚═════╝╚══════╝    ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝
+#   Script to install my dotfiles
+#   Author: ddat-tebayo
+#   url: https://github.com/ddat-tebayo
+
+RED=$(tput setaf 1)
+GRN=$(tput setaf 2)
+YLW=$(tput setaf 3)
+BLU=$(tput setaf 4)
+MGT=$(tput setaf 5)
+CYN=$(tput setaf 6)
+WHT=$(tput setaf 7)
+BLD=$(tput bold)
+RST=$(tput sgr0)
+
+backup_folder=~/.RiceBackup
+date=$(date +%Y%m%d-%H%M%S)
+
+logo () {
+
+    local text="${1:?}"
+
+	printf "
+                        $BLU.
+                       $BLU/ $MGT\\
+                      $BLU/   $MGT\\
+                     $BLU/^.   $MGT\\
+                    $BLU/  .$WHT-$MGT.  \\
+                   $BLU/  (   $MGT) _\\
+                  $BLU/ _.~   $MGT~._^\\
+                 $BLU/.^         $MGT^.\\
+
+	"
+    printf "$RED󰮯   $CYN   $YLW󰊠   $WHT   $MGT󰊠   $GRN   $BLU󰊠   $RED   $WHT󰮯\n\n\n"
+    printf '%s[%s%s %s%s %s]%s\n\n' "${RED}" "${RST}" "${CYN}" "${text}" "${RST}" "${RED}" "${RST}"
+}
+
+########## ---------- You must not run this as root ---------- ##########
+
+if [ "$(id -u)" = 0 ]; then
+    echo "This script MUST NOT be run as root user."
+    exit 1
+fi
+
+home_dir=$HOME
+current_dir=$(pwd)
+
+if [ "$current_dir" != "$home_dir" ]; then
+    printf "%s%sThe script must be executed from the HOME directory.%s\n" "${BLD}" "${YLW}" "${RST}"
+    exit 1
+fi
+
+########## ---------- Welcome ---------- ##########
+
+logo "Welcome!"
+printf '%s%sThis script will:\n%s- Check for necessary dependencies and installs any that are missing.\n- Clone my repository into your HOME directory, backs up your files, and copies new files.\n- DO NOT modify any of your system configurations.\n- Need your root password to install missing dependencies\n- Switch to zsh shell if its not your default.%s\n\n' "${BLD}" "${BLU}" "${RST}"
+
+while true; do
+    read -rp " $YLW Do you wish to continue? [y/N]: $RST" yn
+    case $yn in
+        [Yy]* ) break ;;
+        [Nn]* ) exit ;;
+        * ) printf " $RED Error: just write 'y' or 'n' $RST\n\n" ;;
+    esac
+done
+clear
+
+# ########## ---------- Install packages ---------- ##########
+
+logo "Installing needed packages.."
+
+dependencies=(alacritty bspwm dunst git picom polybar ranger rofi sxhkd xdg-user-dirs zsh)
+
+is_installed() {
+    pacman -Q "$1" &> /dev/null
+}
+
+printf "%s%sChecking for required packages...%s\n" "${BLD}" "${BLU}" "${RST}"
+for package in "${dependencies[@]}"; do
+    if ! is_installed "$package"; then
+        if sudo pacman -S "$package" --noconfirm >/dev/null 2>> RiceError.log; then
+            printf "%s%s%s %shas been installed succesfully.%s\n" "${BLD}" "${YLW}" "$package" "${BLU}" "${RST}"
+            sleep 1
+        else
+            printf "%s%s%s %shas not been installed correctly. See %sRiceError.log %sfor more details.%s\n" "${BLD}" "${YLW}" "$package" "${RED}" "${BLU}" "${RED}" "${RST}"
+            sleep 1
+        fi
+    else
+        printf '%s%s%s %sis already installed on your system!%s\n' "${BLD}" "${YLW}" "$package" "${GRN}" "${RST}"
+        sleep 1
+    fi
+done
+sleep 5
+clear
+
+# ########## ---------- Prepare Folders ---------- ##########
+
+# Checks if the user-dirs.dirs file doesn't exist in ~/.config
+if [ ! -e "$HOME/.config/user-dirs.dirs" ]; then
+    xdg-user-dirs-update
+fi
+
+# ########## ---------- Clone the Rice! ---------- ##########
+
+logo "Downloading dotfiles"
+
+repo_url="https://github.com/ddat-tebayo/dotfiles"
+repo_dir="$HOME/dattebayo_dotfiles"
+
+# Checks if the repository folder exists, and deletes it if it does
+if [ -d "$repo_dir" ]; then
+    rm -rf "$repo_dir"
+fi
+
+# Clone the repository
+printf "$YLW Cloning dotfiles from $MGT%s\n" "$repo_url $RST"
+git clone --depth=1 "$repo_url" "$repo_dir"
+sleep 2
+clear
+
+# ########## ---------- Backup files ---------- ##########
+
+logo "Backup files"
+
+printf "\nBackup files will be stored in %s%s%s/.RiceBackup%s \n\n" "${BLD}" "${RED}" "$HOME" "${RST}"
+sleep 10
+
+[ ! -d "$backup_folder" ] && mkdir -p "$backup_folder"
+
+for folder in alacritty bspwm dunst eww mpd ncmpcpp paru picom polybar ranger rofi sxhkd zsh; do
+    if [ -d "$HOME/.config/$folder" ]; then
+        if mv "$HOME/.config/$folder" "$backup_folder/${folder}_$date" 2>> RiceError.log; then
+            printf "%s%s%s folder backed up successfully at %s%s/%s_%s%s\n" "${BLD}" "${GRN}" "$folder" "${BLU}" "$backup_folder" "$folder" "$date" "${RST}"
+            sleep 1
+        else
+            printf "%s%sFailed to backup %s folder. See %sRiceError.log%s\n" "${BLD}" "${RED}" "$folder" "${BLU}" "${RST}"
+            sleep 1
+        fi
+    else
+        printf "%s%s%s folder does not exist, %sno backup needed%s\n" "${BLD}" "${GRN}" "$folder" "${YLW}" "${RST}"
+        sleep 1
+    fi
+done
+
+for folder in "$HOME"/.mozilla/firefox/*.default-release/chrome; do
+    if [ -d "$folder" ]; then
+        if mv "$folder" "$backup_folder"/chrome_"$date" 2>> RiceError.log; then
+            printf "%s%sChrome folder backed up successfully at %s%s/chrome_%s%s\n" "${BLD}" "${GRN}" "${BLU}" "$backup_folder" "${date}" "${RST}"
+        else
+            printf "%s%sFailed to backup Chrome folder. See %sRiceError.log%s\n" "${BLD}" "${RED}" "${BLU}" "${RST}"
+        fi
+    else
+        printf "%s%sThe folder Chrome does not exist, %sno backup needed%s\n" "${BLD}" "${GRN}" "${YLW}" "${RST}"
+    fi
+done
+
+for file in "$HOME"/.mozilla/firefox/*.default-release/user.js; do
+    if [ -f "$file" ]; then
+        if mv "$file" "$backup_folder"/user.js_"$date" 2>> RiceError.log; then
+            printf "%s%suser.js file backed up successfully at %s%s/user.js_%s%s\n" "${BLD}" "${GRN}" "${BLU}" "$backup_folder" "${date}" "${RST}"
+        else
+            printf "%s%sFailed to backup user.js file. See %sRiceError.log%s\n" "${BLD}" "${RED}" "${BLU}" "${RST}"
+        fi
+    else
+        printf "%s%sThe file user.js does not exist, %sno backup needed%s\n" "${BLD}" "${GRN}" "${YLW}" "${RST}"
+    fi
+done
+
+if [ -f ~/.zshrc ]; then
+    if mv ~/.zshrc "$backup_folder"/.zshrc_"$date" 2>> RiceError.log; then
+        printf "%s%s.zshrc file backed up successfully at %s%s/.zshrc_%s%s\n" "${BLD}" "${GRN}" "${BLU}" "$backup_folder" "${date}" "${RST}"
+    else
+        printf "%s%sFailed to backup .zshrc file. See %sRiceError.log%s\n" "${BLD}" "${RED}" "${BLU}" "${RST}"
+    fi
+else
+    printf "%s%sThe file .zshrc does not exist, %sno backup needed%s\n" "${BLD}" "${GRN}" "${YLW}" "${RST}"
+fi
+
+printf "%s%s\n\nDone!!%s\n\n" "${BLD}" "${GRN}" "${RST}"
+sleep 5
+
+# ########## ---------- Copy the Rice! ---------- ##########
+
+logo "Installing dotfiles.."
+printf "Copying files to their respective directories..\n"
+
+[ ! -d ~/.config ] && mkdir -p ~/.config
+[ ! -d ~/.local/bin ] && mkdir -p ~/.local/bin
+[ ! -d ~/.local/share ] && mkdir -p ~/.local/share
+
+for dirs in ~/dattebayo_dotfiles/.config/*; do
+    dir_name=$(basename "$dirs")
+    if cp -R "${dirs}" ~/.config/ 2>> RiceError.log; then
+        printf "%s%s%s %sconfiguration installed succesfully%s\n" "${BLD}" "${YLW}" "${dir_name}" "${GRN}" "${RST}"
+        sleep 1
+    else
+        printf "%s%s%s %sconfiguration failed to install, see %sRiceError.log %sfor more details.%s\n" "${BLD}" "${YLW}" "${dir_name}" "${RED}" "${BLU}" "${RED}" "${RST}"
+        sleep 1
+    fi
+done
+
+for folder in applications asciiart fonts; do
+    if cp -R ~/dattebayo_dotfiles/.local/share/$folder ~/.local/share/ 2>> RiceError.log; then
+        printf "%s%s%s %sfolder copied succesfully!%s\n" "${BLD}" "${YLW}" "$folder" "${GRN}" "${RST}"
+        sleep 1
+    else
+        printf "%s%s%s %sfolder failed to copy, see %sRiceError.log %sfor more details.%s\n" "${BLD}" "${YLW}" "$folder" "${RED}" "${BLU}" "${RED}" "${RST}"
+        sleep 1
+    fi
+done
+
+if cp -R ~/dattebayo_dotfiles/.local/bin ~/.local/ 2>> RiceError.log; then
+    printf "%s%sbin %sfolder copied succesfully!%s\n" "${BLD}" "${YLW}" "${GRN}" "${RST}"
+    sleep 1
+else
+    printf "%s%sbin %sfolder failed to copy, see %sRiceError.log %sfor more details.%s\n" "${BLD}" "${YLW}" "${RED}" "${BLU}" "${RED}" "${RST}"
+    sleep 1
+fi
+
+if cp -R ~/dattebayo_dotfiles/.mozilla/firefox/* ~/.mozilla/firefox/*.default-release/ 2>> RiceError.log; then
+    printf "%s%sFirefox theme %scopied succesfully!%s\n" "${BLD}" "${YLW}" "${GRN}" "${RST}"
+    sleep 1
+else
+    printf "%s%sFirefox theme %sfailed to copy, see %sRiceError.log %sfor more details.%s\n" "${BLD}" "${YLW}" "${RED}" "${BLU}" "${RED}" "${RST}"
+    sleep 1
+fi
+
+sed -i "s/user_pref(\"browser.startup.homepage\", \"file:\/\/\/home\/TienDat\/.local\/share\/startup-page\/index.html\")/user_pref(\"browser.startup.homepage\", \"file:\/\/\/home\/$USER\/.local\/share\/startup-page\/index.html\")/" "$HOME"/.mozilla/firefox/*.default-release/user.js
+sed -i "s/name: 'ddat-tebayo'/name: '$USER'/" "$HOME"/.local/share/startup-page/config.js
+cp -f "$HOME"/dattebayo_dotfiles/home/.zshrc "$HOME"
+fc-cache -rv >/dev/null 2>&1
+
+printf "\n\n%s%sFiles copied succesfully!!%s\n" "${BLD}" "${GRN}" "${RST}"
+sleep 5
+# ########## ---------- Install Paru & others ---------- ##########
+
+logo "Installing Paru, Eww, tdrop & xqp"
+
+# # Install Paru
+if command -v paru >/dev/null 2>&1; then
+    printf "%s%sParu is already installed%s\n" "${BLD}" "${GRN}" "${RST}"
+else
+    printf "%s%sInstalling paru%s\n" "${BLD}" "${BLU}" "${RST}"
+    {
+        cd "$HOME" || exit
+        git clone https://aur.archlinux.org/paru-bin.git
+        cd paru-bin || exit
+        makepkg -si --noconfirm
+        } || {
+        printf "\n%s%sFailed to install Paru. You may need to install it manually%s\n" "${BLD}" "${RED}" "${RST}"
+    }
+fi
+
+# # Install tdrop for scratchpads
+if command -v tdrop >/dev/null 2>&1; then
+    printf "\n%s%sTdrop is already installed%s\n" "${BLD}" "${GRN}" "${RST}"
+else
+    printf "\n%s%sInstalling tdrop, this should be fast!%s\n" "${BLD}" "${BLU}" "${RST}"
+    paru -S tdrop-git --skipreview --noconfirm
+fi
+
+# # Install xqp
+if command -v xqp >/dev/null 2>&1; then
+    printf "\n%s%sxqp is already installed%s\n" "${BLD}" "${GRN}" "${RST}"
+else
+    printf "\n%s%sInstalling xqp, this should be fast!%s\n" "${BLD}" "${BLU}" "${RST}"
+    paru -S xqp --skipreview --noconfirm
+fi
+
+# # Install Eww
+if command -v eww >/dev/null 2>&1; then
+    printf "\n%s%sEww is already installed%s\n" "${BLD}" "${GRN}" "${RST}"
+else
+    printf "\n%s%sInstalling Eww, this could take 10 mins or more.%s\n" "${BLD}" "${BLU}" "${RST}"
+    {
+        sudo pacman -S rustup --noconfirm
+        cd "$HOME" || exit
+        git clone https://github.com/elkowar/eww
+        cd eww || exit
+        cargo build --release --no-default-features --features x11
+        sudo install -m 755 "$HOME/eww/target/release/eww" -t /usr/bin/
+        cd "$HOME" || exit
+        rm -rf {paru-bin,.cargo,.rustup,eww}
+        } || {
+        printf "\n%s%sFailed to install Eww. You may need to install it manually%s\n" "${BLD}" "${RED}" "${RST}"
+    }
+fi
+
+# ########## ---------- Enable MPD service ---------- ##########
+
+logo "Enabling mpd service"
+
+# Check if the mpd service is enabled at the global (system) level
+if systemctl is-enabled --quiet mpd.service; then
+    printf "\n%s%sDisabling and stopping the global mpd service%s\n" "${BLD}" "${BLU}" "${RST}"
+    sudo systemctl stop mpd.service
+    sudo systemctl disable mpd.service
+fi
+
+printf "\n%s%sEnabling and starting the user-level mpd service%s\n" "${BLD}" "${YLW}" "${RST}"
+systemctl --user enable --now mpd.service
+
+printf "%s%s\nDone!!%s\n\n" "${BLD}" "${GRN}" "${RST}"
+sleep 2
+
+# ########## --------- Change shell to zsh ---------- ##########
+
+logo "Changing default shell to zsh"
+
+if [[ $SHELL != "/usr/bin/zsh" ]]; then
+    printf "\n%s%sChanging your shell to zsh. Your root password is needed.%s\n\n" "${BLD}" "${YLW}" "${RST}"
+    # Change the shell to zsh
+    chsh -s /usr/bin/zsh
+    printf "%s%sShell changed to zsh. Please reboot.%s\n\n" "${BLD}" "${GRN}" "${RST}"
+else
+    printf "%s%sYour shell is already zsh\nGood bye! installation finished, now reboot%s\n" "${BLD}" "${GRN}" "${RST}"
+fi
+zsh
