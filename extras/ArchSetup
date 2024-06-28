@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+
+RED=$(tput setaf 1)
+GRN=$(tput setaf 2)
+YLW=$(tput setaf 3)
+BLU=$(tput setaf 4)
+MGT=$(tput setaf 5)
+CYN=$(tput setaf 6)
+WHT=$(tput setaf 7)
+BLD=$(tput bold)
+RST=$(tput sgr0)
+
+logo () {
+
+    local text="${1:?}"
+
+	printf "
+                        $BLU.
+                       $BLU/ $MGT\\
+                      $BLU/   $MGT\\
+                     $BLU/^.   $MGT\\
+                    $BLU/  .$WHT-$MGT.  \\
+                   $BLU/  (   $MGT) _\\
+                  $BLU/ _.~   $MGT~._^\\
+                 $BLU/.^         $MGT^.\\
+
+	"
+    printf "$RED󰮯   $CYN   $YLW󰊠   $WHT   $MGT󰊠   $GRN   $BLU󰊠   $RED   $WHT󰮯\n\n\n"
+    printf '%s[%s%s %s%s %s]%s\n\n' "${RED}" "${RST}" "${CYN}" "${text}" "${RST}" "${RED}" "${RST}"
+}
+
+########## ---------- Warning ---------- ##########
+logo "Welcome!"
+
+while true; do
+    read -rp " $YLW- This script configures my personal Arch setup. Do you wish to continue (NOT recommended) ? [y/N]: $RST" yn
+    case $yn in
+        [Yy]* ) break ;;
+        [Nn]* ) exit ;;
+        * ) printf " $RED Error: just write 'y' or 'n' $RST\n\n" ;;
+    esac
+done
+clear
+
+#################################################
+check_install_dependencies() {
+    local dependencies="$1"
+    local missing=()
+
+    # Split the string into an array using space as delimiter
+    IFS=' ' read -r -a deps <<< "$dependencies"
+
+    for dep in "${deps[@]}"; do
+        if ! pacman -Q "$dep" &> /dev/null; then
+            missing+=("$dep")
+        fi
+    done
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo "Installing missing dependencies: ${missing[*]}"
+        sudo pacman -Sy --noconfirm "${missing[@]}"
+    fi
+}
+
+adjust_brightness() {
+    check_install_dependencies "xorg-xgamma brightnessctl"
+
+    xgamma -gamma 0.8
+    brightnessctl s 100%
+
+    printf "%s%sAdjust contrast, brightness succesfully.%s\n" "${BLD}" "${GRN}" "${RST}"
+}
+
+setup_audio() {
+    check_install_dependencies "alsa-utils pipewire pipewire-alsa pipewire-jack pipewire-pulse"
+
+    #By default, ALSA has all channels muted. Those have to be unmuted manually.
+    #Unmute with amixer
+    amixer sset Master unmute 100%
+    amixer sset Speaker unmute 100%
+    amixer sset Headphone unmute 100%
+
+    #Enable and start pipewire
+    systemctl --user enable pipewire
+    systemctl --user start pipewire
+}
+
+change_dns_server() {
+    if ! grep -q "static domain_name_servers=8.8.4.4 8.8.8.8" /etc/dhcpcd.conf; then
+        echo "static domain_name_servers=8.8.4.4 8.8.8.8" | sudo tee -a /etc/dhcpcd.conf > /dev/null
+        printf "%s%sChange default DNS server successfully.%s\n" "${BLD}" "${GRN}" "${RST}"
+    else
+        printf "%s%sDefault DNS server already configured.%s\n" "${BLD}" "${YLW}" "${RST}"
+    fi
+}
+
+config_touchpad() {
+    local file_path="/etc/X11/xorg.conf.d/30-touchpad.conf"
+
+    if [ ! -f "$file_path" ]; then
+        sudo tee "$file_path" > /dev/null << EOF
+Section "InputClass"
+    Identifier "touchpad"
+    Driver "libinput"
+    MatchIsTouchpad "on"
+    Option "Tapping" "on"
+    Option "TappingButtonMap" "lmr"
+    Option "NaturalScrolling" "true"
+EndSection
+EOF
+        printf "%s%sEnable touchpad tapping and natural scrolling successfully.%s\n" "${BLD}" "${GRN}" "${RST}"
+    else
+        printf "%s%sTouchpad configuration already exists.%s\n" "${BLD}" "${YLW}" "${RST}"
+    fi
+}
+
+change_shell_to_zsh() {
+    check_install_dependencies "zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
+
+    if [[ ! "$(basename "$SHELL")" = "zsh" ]]; then
+        printf "\n%s%sChanging your shell to zsh. Your root password is needed.%s\n\n" "${BLD}" "${YLW}" "${RST}"
+        # Change the shell to zsh
+        chsh -s "$(command -v zsh)"
+        printf "%s%sShell changed to zsh. Please reboot.%s\n\n" "${BLD}" "${GRN}" "${RST}"
+    else
+        printf "%s%sYour shell is already zsh!%s\n" "${BLD}" "${GRN}" "${RST}"
+    fi
+}
+
+install_and_configure_all() {
+    adjust_brightness
+    setup_audio
+    change_dns_server
+    config_touchpad
+    change_shell_to_zsh
+    printf "%s%sInstallation finished, reboot now!%s\n" "${BLD}" "${YLW}" "${RST}"
+}
+
+show_menu() {
+    logo "Welcome!"
+    printf '%s%sSelect an option:%s\n\n' "${BLD}" "${BLU}" "${RST}"
+
+    printf '%s%s1)%s Adjust contrast and brightness%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
+    printf '%s%s1)%s Setup audio/sound%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
+    printf '%s%s2)%s Change default DNS server to Google DNS%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
+    printf '%s%s3)%s Enable touchpad tapping, natural scrolling%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
+    printf '%s%s4)%s Changing default shell to zsh%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
+    printf '%s%s5)%s All%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
+    printf '%s%s6)%s Exit%s\n\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
+
+    printf '%s%sEnter your choice [1-6]: %s' "${BLD}" "${YLW}" "${RST}"
+}
+
+while true; do
+    show_menu
+    read choice
+    case $choice in
+        1) adjust_brightness ;;
+        2) setup_audio ;;
+        3) change_dns_server ;;
+        4) config_touchpad ;;
+        5) change_shell_to_zsh ;;
+        6) install_and_configure_all; break ;;
+        7) echo "Exiting..."; exit 0 ;;
+        *) echo "Invalid option, please try again." ;;
+    esac
+done
