@@ -57,7 +57,7 @@ check_install_dependencies() {
     done
 
     if [ ${#missing[@]} -gt 0 ]; then
-        echo "Installing missing dependencies: ${missing[*]}"
+        echo "%s%sInstalling missing dependencies: ${missing[*]}%s\n" "${BLD}" "${BLU}" "${RST}"
         sudo pacman -Sy --noconfirm "${missing[@]}"
     fi
 }
@@ -83,6 +83,8 @@ setup_audio() {
     #Enable and start pipewire
     systemctl --user enable pipewire
     systemctl --user start pipewire
+
+    printf "%s%sBasic audio setup completed.%s\n" "${BLD}" "${GRN}" "${RST}"
 }
 
 change_dns_server() {
@@ -115,7 +117,7 @@ EOF
 }
 
 change_shell_to_zsh() {
-    check_install_dependencies "zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
+    check_install_dependencies "zsh"
 
     if [[ ! "$(basename "$SHELL")" = "zsh" ]]; then
         printf "\n%s%sChanging your shell to zsh. Your root password is needed.%s\n\n" "${BLD}" "${YLW}" "${RST}"
