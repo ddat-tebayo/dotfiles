@@ -27,24 +27,28 @@ display_logo () {
 
 info_msg() {
     local text="${1:?}"
-    printf '\n\n%s%s[%s %s%s  %s%s %s%s]%s\n\n' "${BLD}" "${RED}" "${RST}" "${BLD}" "${BLU}" "${text}" "${RST}" "${BLD}" "${RED}" "${RST}"
+    printf '\n\n%s%s %s %s\n\n' "${BLD}" "${BLU}" "${text}" "${RST}"
 }
 selection() {
     local ordinal="${1:?}"
     local text="${2:?}"
     printf '%s%s%s)%s  %s%s%s\n' "${BLD}" "${CYN}" "${ordinal}" "${RST}" "${WHT}" "${text}" "${RST}"
 }
+installing_msg() {
+    local text="${1:?}"
+    printf '%s%s %s %s\n' "${BLD}" "${WHT}" "${text}" "${RST}"
+}
 success_msg() {
     local text="${1:?}"
-    printf '%s%s    %s%s\n' "${BLD}" "${GRN}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${text}" "${RST}"
 }
 warning_msg() {
     local text="${1:?}"
-    printf '%s%s    %s%s\n' "${BLD}" "${YLW}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${text}" "${RST}"
 }
 error_msg() {
     local text="${1:?}"
-    printf '%s%s    %s%s\n' "${BLD}" "${RED}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${text}" "${RST}"
 }
 
 ########## ---------- Warning ---------- ##########
@@ -141,8 +145,6 @@ setup_audio() {
     #By default, ALSA has all channels muted. Those have to be unmuted manually.
     #Unmute with amixer
     amixer sset Master unmute 100%
-    amixer sset Speaker unmute 100%
-    amixer sset Headphone unmute 100%
 
     #Enable and start pipewire
     systemctl --user enable pipewire
