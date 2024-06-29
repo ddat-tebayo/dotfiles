@@ -10,10 +10,7 @@ WHT=$(tput setaf 7)
 BLD=$(tput bold)
 RST=$(tput sgr0)
 
-logo () {
-
-    local text="${1:?}"
-
+display_logo () {
 	printf "
                         $BLU.
                        $BLU/ $MGT\\
@@ -26,23 +23,76 @@ logo () {
 
 	"
     printf "$RED󰮯   $CYN   $YLW󰊠   $WHT   $MGT󰊠   $GRN   $BLU󰊠   $RED   $WHT󰮯\n\n\n"
-    printf '%s[%s%s %s%s %s]%s\n\n' "${RED}" "${RST}" "${CYN}" "${text}" "${RST}" "${RED}" "${RST}"
+}
+
+info_msg() {
+    local text="${1:?}"
+    printf '\n\n%s%s[%s %s%s  %s%s %s%s]%s\n\n' "${BLD}" "${RED}" "${RST}" "${BLD}" "${BLU}" "${text}" "${RST}" "${BLD}" "${RED}" "${RST}"
+}
+selection() {
+    local ordinal="${1:?}"
+    local text="${2:?}"
+    printf '%s%s%s)%s  %s%s%s\n' "${BLD}" "${CYN}" "${ordinal}" "${RST}" "${WHT}" "${text}" "${RST}"
+}
+success_msg() {
+    local text="${1:?}"
+    printf '%s%s    %s%s\n' "${BLD}" "${GRN}" "${text}" "${RST}"
+}
+warning_msg() {
+    local text="${1:?}"
+    printf '%s%s    %s%s\n' "${BLD}" "${YLW}" "${text}" "${RST}"
+}
+error_msg() {
+    local text="${1:?}"
+    printf '%s%s    %s%s\n' "${BLD}" "${RED}" "${text}" "${RST}"
 }
 
 ########## ---------- Warning ---------- ##########
-logo "Welcome!"
+display_logo
+info_msg "Welcome!"
+
+if [ "$(id -u)" = 0 ]; then
+    warning_msg "This script MUST NOT be run as root user"
+    exit 1
+fi
 
 while true; do
-    read -rp " $YLW- This script configures my personal Arch setup. Do you wish to continue (NOT recommended) ? [y/N]: $RST" yn
+    read -rp "$BLD$YLW- This script configures my personal Arch setup. Do you wish to continue (NOT recommended) ? [y/N]: $RST" yn
     case $yn in
         [Yy]* ) break ;;
         [Nn]* ) exit ;;
-        * ) printf " $RED Error: just write 'y' or 'n' $RST\n\n" ;;
+        *) error_msg "Error: just write 'y' or 'n'" ;;
     esac
 done
 clear
 
-#################################################
+########## ---------- Utility Functions ---------- ##########
+restart_shell_session() {
+    # Get the current shell
+    current_shell=$(echo $SHELL)
+
+    # Determine the configuration file based on the current shell
+    case "$current_shell" in
+        */bash)
+            config_file=".bashrc"
+            ;;
+        */zsh)
+            config_file=".zshrc"
+            ;;
+        */fish)
+            config_file=".config/fish/config.fish"
+            ;;
+        *)
+            error_msg "Unsupported shell: $current_shell"
+            exit 1
+            ;;
+    esac
+
+    # Restart the session by sourcing the appropriate configuration file
+    source ~/$config_file
+    success_msg "Restarted shell session"
+}
+
 check_install_dependencies() {
     local dependencies="$1"
     local missing=()
@@ -50,25 +100,39 @@ check_install_dependencies() {
     # Split the string into an array using space as delimiter
     IFS=' ' read -r -a deps <<< "$dependencies"
 
-    for dep in "${deps[@]}"; do
-        if ! pacman -Q "$dep" &> /dev/null; then
-            missing+=("$dep")
+    is_installed() {
+        pacman -Q "$1" &> /dev/null
+    }
+    installing_msg "Checking for required packages..."
+    for package in "${deps[@]}"; do
+        if ! is_installed "$package"; then
+            missing+=("$package")
+        else
+            warning_msg "$package is already installed on your system!"
+            sleep 1
         fi
     done
 
     if [ ${#missing[@]} -gt 0 ]; then
-        echo "%s%sInstalling missing dependencies: ${missing[*]}%s\n" "${BLD}" "${BLU}" "${RST}"
-        sudo pacman -Sy --noconfirm "${missing[@]}"
+        for package in "${missing[@]}"; do
+            if sudo pacman -S "$package" --noconfirm >/dev/null 2>> RiceError.log; then
+                success_msg "$package has been installed successfully"
+                sleep 1
+            else
+                error_msg "$package has not been installed correctly. See RiceError.log for more details"
+                sleep 1
+            fi
+        done
     fi
 }
-
+########## ---------- Functional components ---------- ##########
 adjust_brightness() {
     check_install_dependencies "xorg-xgamma brightnessctl"
 
     xgamma -gamma 0.8
     brightnessctl s 100%
 
-    printf "%s%sAdjust contrast, brightness succesfully.%s\n" "${BLD}" "${GRN}" "${RST}"
+    success_msg "Adjust contrast, brightness succesfully"
 }
 
 setup_audio() {
@@ -84,15 +148,15 @@ setup_audio() {
     systemctl --user enable pipewire
     systemctl --user start pipewire
 
-    printf "%s%sBasic audio setup completed.%s\n" "${BLD}" "${GRN}" "${RST}"
+    success_msg "Basic audio setup completed"
 }
 
 change_dns_server() {
     if ! grep -q "static domain_name_servers=8.8.4.4 8.8.8.8" /etc/dhcpcd.conf; then
         echo "static domain_name_servers=8.8.4.4 8.8.8.8" | sudo tee -a /etc/dhcpcd.conf > /dev/null
-        printf "%s%sChange default DNS server successfully.%s\n" "${BLD}" "${GRN}" "${RST}"
+        success_msg "Change default DNS server successfully"
     else
-        printf "%s%sDefault DNS server already configured.%s\n" "${BLD}" "${YLW}" "${RST}"
+        warning_msg "Default DNS server already configured"
     fi
 }
 
@@ -110,9 +174,9 @@ Section "InputClass"
     Option "NaturalScrolling" "true"
 EndSection
 EOF
-        printf "%s%sEnable touchpad tapping and natural scrolling successfully.%s\n" "${BLD}" "${GRN}" "${RST}"
+        success_msg "Enable touchpad tapping and natural scrolling successfully"
     else
-        printf "%s%sTouchpad configuration already exists.%s\n" "${BLD}" "${YLW}" "${RST}"
+        warning_msg "Touchpad configuration already exists"
     fi
 }
 
@@ -120,12 +184,12 @@ change_shell_to_zsh() {
     check_install_dependencies "zsh"
 
     if [[ ! "$(basename "$SHELL")" = "zsh" ]]; then
-        printf "\n%s%sChanging your shell to zsh. Your root password is needed.%s\n\n" "${BLD}" "${YLW}" "${RST}"
+        warning_msg "Changing your shell to zsh. Your root password is needed"
         # Change the shell to zsh
         chsh -s "$(command -v zsh)"
-        printf "%s%sShell changed to zsh. Please reboot.%s\n\n" "${BLD}" "${GRN}" "${RST}"
+        success_msg "Shell changed to zsh. Please reboot"
     else
-        printf "%s%sYour shell is already zsh!%s\n" "${BLD}" "${GRN}" "${RST}"
+        warning_msg "Your shell is already zsh!"
     fi
 }
 
@@ -135,22 +199,23 @@ install_and_configure_all() {
     change_dns_server
     config_touchpad
     change_shell_to_zsh
-    printf "%s%sInstallation finished, reboot now!%s\n" "${BLD}" "${YLW}" "${RST}"
+    success_msg "Installation finished, reboot now!"
 }
 
+########## ---------- Main menu ---------- ##########
 show_menu() {
-    logo "Welcome!"
-    printf '%s%sSelect an option:%s\n\n' "${BLD}" "${BLU}" "${RST}"
+    display_logo
+    info_msg "Select an option"
 
-    printf '%s%s1)%s Adjust contrast and brightness%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
-    printf '%s%s1)%s Setup audio/sound%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
-    printf '%s%s2)%s Change default DNS server to Google DNS%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
-    printf '%s%s3)%s Enable touchpad tapping, natural scrolling%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
-    printf '%s%s4)%s Changing default shell to zsh%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
-    printf '%s%s5)%s All%s\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
-    printf '%s%s6)%s Exit%s\n\n' "${BLD}" "${CYN}" "${RST}" "${RST}"
+    selection 1 "Adjust contrast and brightness"
+    selection 2 "Setup audio/sound"
+    selection 3 "Change default DNS server to Google DNS"
+    selection 4 "Enable touchpad tapping, natural scrolling"
+    selection 5 "Changing default shell to zsh"
+    selection 6 "All"
+    selection 7 "Exit"
 
-    printf '%s%sEnter your choice [1-6]: %s' "${BLD}" "${YLW}" "${RST}"
+    warning_msg "Enter your choice [1-6]: "
 }
 
 while true; do
@@ -166,4 +231,5 @@ while true; do
         7) echo "Exiting..."; exit 0 ;;
         *) echo "Invalid option, please try again." ;;
     esac
+    restart_shell_session
 done
