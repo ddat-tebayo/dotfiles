@@ -22,21 +22,17 @@ display_logo () {
                  $BLU/.^         $MGT^.\\
 
 	"
-    printf "$RED󰮯   $CYN   $YLW󰊠   $WHT   $MGT󰊠   $GRN   $BLU󰊠   $RED   $WHT󰮯\n\n\n"
+    printf "$RED󰮯   $CYN   $YLW󰊠   $WHT   $MGT󰊠   $GRN   $BLU󰊠   $RED   $WHT󰮯\n"
 }
 
 info_msg() {
     local text="${1:?}"
-    printf '\n\n%s%s %s %s\n\n' "${BLD}" "${BLU}" "${text}" "${RST}"
+    printf '\n\n%s%s[ %s ] %s\n\n' "${BLD}" "${BLU}" "${text}" "${RST}"
 }
 selection() {
     local ordinal="${1:?}"
     local text="${2:?}"
-    printf '%s%s%s)%s  %s%s%s\n' "${BLD}" "${CYN}" "${ordinal}" "${RST}" "${WHT}" "${text}" "${RST}"
-}
-installing_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${WHT}" "${text}" "${RST}"
+    printf '%s%s%s)%s %s%s%s\n' "${BLD}" "${CYN}" "${ordinal}" "${RST}" "${WHT}" "${text}" "${RST}"
 }
 success_msg() {
     local text="${1:?}"
@@ -94,7 +90,6 @@ restart_shell_session() {
 
     # Restart the session by sourcing the appropriate configuration file
     source ~/$config_file
-    success_msg "Restarted shell session"
 }
 
 check_install_dependencies() {
@@ -107,12 +102,12 @@ check_install_dependencies() {
     is_installed() {
         pacman -Q "$1" &> /dev/null
     }
-    installing_msg "Checking for required packages..."
+    printf '%s%s%s Checking for required packages...%s\n' "${BLD}" "${WHT}" "${text}" "${RST}"
     for package in "${deps[@]}"; do
         if ! is_installed "$package"; then
             missing+=("$package")
         else
-            warning_msg "$package is already installed on your system!"
+            warning_msg "   $package is already installed on your system!"
             sleep 1
         fi
     done
@@ -120,53 +115,68 @@ check_install_dependencies() {
     if [ ${#missing[@]} -gt 0 ]; then
         for package in "${missing[@]}"; do
             if sudo pacman -S "$package" --noconfirm >/dev/null 2>> RiceError.log; then
-                success_msg "$package has been installed successfully"
+                success_msg "   $package has been installed successfully"
                 sleep 1
             else
-                error_msg "$package has not been installed correctly. See RiceError.log for more details"
+                error_msg "   $package has not been installed correctly. See RiceError.log for more details"
                 sleep 1
             fi
         done
     fi
+    printf "\n"
 }
 ########## ---------- Functional components ---------- ##########
 adjust_brightness() {
+    info_msg "Adjust contrast and brightness"
+
     check_install_dependencies "xorg-xgamma brightnessctl"
 
-    xgamma -gamma 0.8
-    brightnessctl s 100%
+    # New values
+    new_gamma=0.8
+    new_brightness_percent=100
 
-    success_msg "Adjust contrast, brightness succesfully"
+    # Apply new settings
+    xgamma -gamma ${new_gamma} > /dev/null 2>> RiceError.log
+    brightnessctl s ${new_brightness_percent}% > /dev/null 2>> RiceError.log
+
+    success_msg "Adjust contrast to ${new_gamma} succesfully"
+    success_msg "Adjust brightness to ${new_brightness_percent}% succesfully"
 }
 
 setup_audio() {
+    info_msg "Setup audio/sound"
+
     check_install_dependencies "alsa-utils pipewire pipewire-alsa pipewire-jack pipewire-pulse"
 
     #By default, ALSA has all channels muted. Those have to be unmuted manually.
     #Unmute with amixer
-    amixer sset Master unmute 100%
+    amixer sset Master unmute 100% > /dev/null 2>> RiceError.log
 
     #Enable and start pipewire
-    systemctl --user enable pipewire
-    systemctl --user start pipewire
+    systemctl --user enable pipewire > /dev/null 2>> RiceError.log
+    systemctl --user start pipewire > /dev/null 2>> RiceError.log
 
     success_msg "Basic audio setup completed"
 }
 
 change_dns_server() {
+    info_msg "Change default DNS server to Google DNS"
+
     if ! grep -q "static domain_name_servers=8.8.4.4 8.8.8.8" /etc/dhcpcd.conf; then
-        echo "static domain_name_servers=8.8.4.4 8.8.8.8" | sudo tee -a /etc/dhcpcd.conf > /dev/null
+        echo "static domain_name_servers=8.8.4.4 8.8.8.8" | sudo tee -a /etc/dhcpcd.conf > /dev/null 2>> RiceError.log
         success_msg "Change default DNS server successfully"
     else
-        warning_msg "Default DNS server already configured"
+        warning_msg "Google DNS server already configured"
     fi
 }
 
 config_touchpad() {
+    info_msg "Enable touchpad tapping, natural scrolling"
+
     local file_path="/etc/X11/xorg.conf.d/30-touchpad.conf"
 
     if [ ! -f "$file_path" ]; then
-        sudo tee "$file_path" > /dev/null << EOF
+        sudo tee "$file_path" > /dev/null 2>> RiceError.log << EOF
 Section "InputClass"
     Identifier "touchpad"
     Driver "libinput"
@@ -178,11 +188,13 @@ EndSection
 EOF
         success_msg "Enable touchpad tapping and natural scrolling successfully"
     else
-        warning_msg "Touchpad configuration already exists"
+        warning_msg "Touchpad configuration already existed"
     fi
 }
 
 change_shell_to_zsh() {
+    info_msg "Changing your default shell to zsh"
+
     check_install_dependencies "zsh"
 
     if [[ ! "$(basename "$SHELL")" = "zsh" ]]; then
@@ -201,6 +213,8 @@ install_and_configure_all() {
     change_dns_server
     config_touchpad
     change_shell_to_zsh
+
+    printf "\n"
     success_msg "Installation finished, reboot now!"
 }
 
@@ -217,7 +231,7 @@ show_menu() {
     selection 6 "All"
     selection 7 "Exit"
 
-    warning_msg "Enter your choice [1-6]: "
+    printf '\n%s%sEnter your choice [1-7]: %s' "${BLD}" "${YLW}" "${RST}"
 }
 
 while true; do
