@@ -1,1 +1,11 @@
-fcitx5 &
+#!/bin/bash
+
+export GTK_IM_MODULE=ibus
+export XMODIFIERS=@im=ibus
+echo 'export QT_IM_MODULE=ibus
+
+# set IBus as the default input method
+export DefaultIMModule=ibus
+
+# Start IBus daemon automatically
+ibus-daemon -drx
