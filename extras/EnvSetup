@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dotfiles_path="https://raw.githubusercontent.com/ddat-tebayo/dotfiles/main/home"
+
 RED=$(tput setaf 1)
 GRN=$(tput setaf 2)
 YLW=$(tput setaf 3)
@@ -10,10 +12,7 @@ WHT=$(tput setaf 7)
 BLD=$(tput bold)
 RST=$(tput sgr0)
 
-backup_folder=~/.RiceBackup
-date=$(date +%Y%m%d-%H%M%S)
-
-logo () {
+display_logo () {
 	printf "
                         $BLU.
                        $BLU/ $MGT\\
@@ -25,18 +24,36 @@ logo () {
                  $BLU/.^         $MGT^.\\
 
 	"
-    printf "$RED󰮯   $CYN   $YLW󰊠   $WHT   $MGT󰊠   $GRN   $BLU󰊠   $RED   $WHT󰮯\n\n\n"
+    printf "$RED󰮯   $CYN   $YLW󰊠   $WHT   $MGT󰊠   $GRN   $BLU󰊠   $RED   $WHT󰮯\n"
 }
 
-title() {
+info_msg() {
     local text="${1:?}"
-    printf '\n\n%s[%s%s %s%s %s]%s\n\n' "${RED}" "${RST}" "${CYN}" "${text}" "${RST}" "${RED}" "${RST}"
+    printf '\n\n%s%s[%s %s%s %s%s %s%s]%s\n\n' "${BLD}" "${RED}" "${RST}" "${BLD}" "${BLU}" "${text}" "${RST}" "${BLD}" "${RED}" "${RST}"
+}
+installing_msg() {
+    local text="${1:?}"
+    printf '%s%s %s %s\n' "${BLD}" "${WHT}" "${text}" "${RST}"
+}
+success_msg() {
+    local text="${1:?}"
+    printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${text}" "${RST}"
+}
+warning_msg() {
+    local text="${1:?}"
+    printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${text}" "${RST}"
+}
+error_msg() {
+    local text="${1:?}"
+    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${text}" "${RST}"
 }
 
-########## ---------- You must not run this as root ---------- ##########
+########## ---------- Warning ---------- ##########
+display_logo
+info_msg "Welcome!"
 
 if [ "$(id -u)" = 0 ]; then
-    echo "This script MUST NOT be run as root user."
+    warning_msg "This script MUST NOT be run as root user"
     exit 1
 fi
 
@@ -44,25 +61,69 @@ home_dir=$HOME
 current_dir=$(pwd)
 
 if [ "$current_dir" != "$home_dir" ]; then
-    printf "%s%sThe script must be executed from the HOME directory.%s\n" "${BLD}" "${YLW}" "${RST}"
+    warning_msg "The script must be executed from the HOME directory"
     exit 1
 fi
 
-########## ---------- Warning ---------- ##########
-logo
-title "Welcome!"
-
 while true; do
-    read -rp " $YLW- This script configures my personal Arch setup. Do you wish to continue (NOT recommended) ? [y/N]: $RST" yn
+    read -rp "$BLD$YLW- This script configures my personal Arch setup. Do you wish to continue (NOT recommended) ? [y/N]: $RST" yn
     case $yn in
         [Yy]* ) break ;;
         [Nn]* ) exit ;;
-        * ) printf " $RED Error: just write 'y' or 'n' $RST\n\n" ;;
+        *) error_msg "Error: just write 'y' or 'n'" ;;
     esac
 done
 clear
 
-########## ---------- Install packages ---------- ##########
+########## ---------- Utility Functions ---------- ##########
+backup() {
+    local src=$1
+    local backup_folder="$HOME/.RiceBackup"
+    local datetime=$(date +%Y%m%d-%H%M%S)
+
+    local base_name=$(basename "$src")
+    local dest="$backup_folder/$base_name"_"$datetime"
+
+    mkdir -p "$backup_folder"
+
+    if [ -d "$src" ] || [ -f "$src" ]; then
+        if mv "$src" "$dest" 2>> RiceError.log; then
+            success_msg "$base_name backed up successfully at $dest"
+        else
+            error_msg "Failed to backup. See ~/RiceError.log"
+        fi
+    else
+        warning_msg "$base_name does not exist, no backup needed"
+    fi
+    printf "\n"
+}
+
+restart_shell_session() {
+    # Get the current shell
+    current_shell=$(echo $SHELL)
+
+    # Determine the configuration file based on the current shell
+    case "$current_shell" in
+        */bash)
+            config_file=".bashrc"
+            ;;
+        */zsh)
+            config_file=".zshrc"
+            ;;
+        */fish)
+            config_file=".config/fish/config.fish"
+            ;;
+        *)
+            error_msg "Unsupported shell: $current_shell"
+            exit 1
+            ;;
+    esac
+
+    # Restart the session by sourcing the appropriate configuration file
+    if source ~/$config_file; then
+        success_msg "Restarted shell session"
+    fi
+}
 
 check_install_dependencies() {
     local dependencies="$1"
@@ -71,157 +132,204 @@ check_install_dependencies() {
     # Split the string into an array using space as delimiter
     IFS=' ' read -r -a deps <<< "$dependencies"
 
-    for dep in "${deps[@]}"; do
-        if ! pacman -Q "$dep" &> /dev/null; then
-            missing+=("$dep")
+    is_installed() {
+        pacman -Q "$1" &> /dev/null
+    }
+    installing_msg "Checking for required packages..."
+
+    for package in "${deps[@]}"; do
+        if ! is_installed "$package"; then
+            missing+=("$package")
+        else
+            warning_msg "   $package is already installed on your system!"
+            sleep 1
         fi
     done
 
     if [ ${#missing[@]} -gt 0 ]; then
-        echo "%s%sInstalling missing dependencies: ${missing[*]}%s\n" "${BLD}" "${BLU}" "${RST}"
-        sudo pacman -Sy --noconfirm "${missing[@]}"
+        for package in "${missing[@]}"; do
+            if sudo pacman -S "$package" --noconfirm >/dev/null 2>> RiceError.log; then
+                success_msg "   $package has been installed successfully"
+                sleep 1
+            else
+                error_msg "   $package has not been installed correctly. See ~/RiceError.log for more details"
+                sleep 1
+            fi
+        done
+    fi
+    printf "\n"
+}
+
+########## ---------- Functional components ---------- ##########
+zsh_config() {
+    info_msg "Install zsh and its plugins"
+
+    backup "$HOME/.zshrc"
+
+    installing_msg "Cloning .zshrc from dotfiles repo..."
+    if curl -fsSL $dotfiles_path/.zshrc -o $HOME/.zshrc;  then
+        success_msg "Clone .zshrc from dotfiles repo successfully"
+        chmod 644 ~/.zshrc
+    else
+        error_msg "Failed to clone .zshrc"
+    fi
+    
+    printf "\n"
+
+    check_install_dependencies "zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
+
+    success_msg "Install zsh and plugins succesfully"
+}
+
+clone_gitconfig() {
+    info_msg "Clone .gitconfig from dotfiles repo"
+
+    backup "$HOME/.gitconfig"
+
+    installing_msg "Cloning .gitconfig from dotfiles repo..."
+    if curl -fsSL $dotfiles_path/.gitconfig -o $HOME/.gitconfig; then
+        success_msg "Clone .gitconfig from dotfiles repo successfully"
+        chmod 644 ~/.gitconfig
+    else
+        error_msg "Failed to clone .gitconfig"
     fi
 }
 
-########## ---------- Install zsh and zsh plugins ... ---------- ##########
-logo
-title "Installing zsh and its plugins"
+install_fnm_nodes() {
+    info_msg "Install Fast Node Manager (fnm), Nodejs"
 
-# Backup current .zshrc file
-if [ -f ~/.zshrc ]; then
-    if mv ~/.zshrc "$backup_folder"/.zshrc_"$date" 2>> RiceError.log; then
-        printf "%s%s.zshrc file backed up successfully at %s%s/.zshrc_%s%s\n" "${BLD}" "${GRN}" "${BLU}" "$backup_folder" "${date}" "${RST}"
-    else
-        printf "%s%sFailed to backup .zshrc file. See %sRiceError.log%s\n" "${BLD}" "${RED}" "${BLU}" "${RST}"
-    fi
-else
-    printf "%s%sThe file .zshrc does not exist, %sno backup needed%s\n" "${BLD}" "${GRN}" "${YLW}" "${RST}"
-fi
+    check_install_dependencies "curl unzip"
 
-curl https://raw.githubusercontent.com/ddat-tebayo/dotfiles/main/home/.zshrc -o $HOME/.zshrc
-chmod 644 ~/.zshrc
-
-check_install_dependencies "zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
-
-
-printf "%s%sInstall zsh and plugins succesfully.%s\n" "${BLD}" "${GRN}" "${RST}"
-
-########## ---------- Install fnm, nodejs ... ---------- ##########
-title "Installing Fast Node Manager (fnm), Nodejs"
-
-check_install_dependencies "curl unzip"
-
-if command -v fnm >/dev/null 2>&1; then
-    printf "%s%sfnm is already installed%s\n" "${BLD}" "${GRN}" "${RST}"
-else
-    printf "%s%sInstalling fnm...%s\n" "${BLD}" "${BLU}" "${RST}"
-    {
-        curl -fsSL https://fnm.vercel.app/install | bash
-        # Source the profile to make fnm available in the current session
-        source ~/.bashrc 2>/dev/null || source ~/.zshrc 2>/dev/null || source ~/.profile 2>/dev/null
-        printf "%s%sInstall fnm succesfully.%s\n" "${BLD}" "${GRN}" "${RST}"
-        } || {
-        printf "\n%s%sFailed to install. You may need to install it manually%s\n" "${BLD}" "${RED}" "${RST}"
-        exit 1
-    }
-fi
-
-# Install Node.js latest LTS version using fnm
-if command -v fnm >/dev/null 2>&1; then
-    printf "%s%sInstalling Node.js lastest LTS version...%s\n" "${BLD}" "${BLU}" "${RST}"
-    if fnm install --lts; then
-        printf "%s%sNode.js lastest LTS installed successfully%s\n" "${BLD}" "${GRN}" "${RST}"
-    else
-        printf "\n%s%sFailed to install Node.js LTS%s\n" "${BLD}" "${RED}" "${RST}"
-    fi
-fi
-
-########## ---------- Install Paru (AUR Helper) ---------- ##########
-
-title "Installing Paru"
-
-if command -v paru >/dev/null 2>&1; then
-    printf "%s%sParu is already installed%s\n" "${BLD}" "${GRN}" "${RST}"
-else
-    printf "%s%sInstalling paru%s\n" "${BLD}" "${BLU}" "${RST}"
-    {
-        cd "$HOME" || exit
-        git clone https://aur.archlinux.org/paru-bin.git
-        cd paru-bin || exit
-        makepkg -si --noconfirm
-        printf "%s%sInstall paru (AUR helper) succesfully.%s\n" "${BLD}" "${GRN}" "${RST}"
-        } || {
-        printf "\n%s%sFailed to install Paru. You may need to install it manually%s\n" "${BLD}" "${RED}" "${RST}"
-    }
-fi
-
-########## ---------- Install a Vietnamese IME for IBus ---------- ##########
-title "Installing Vietnamese keyboard"
-
-check_install_dependencies "ibus"
-
-if command -v ibus >/dev/null 2>&1; then
-    printf "\n%s%sIbus is already installed%s\n" "${BLD}" "${GRN}" "${RST}"
-    printf "\n%s%sInstalling Ibus-bamboo, this should be fast!%s\n" "${BLD}" "${BLU}" "${RST}"
-    paru -S ibus-bamboo --skipreview --noconfirm
-fi
-
-# Create ~/.xprofile if it doesn't exist
-if [ ! -f ~/.xprofile ]; then
-    touch ~/.xprofile
-    chmod 644 ~/.xprofile
-fi
-
-# Add necessary environment variables to ~/.xprofile
-{
-    echo 'export GTK_IM_MODULE=ibus'
-    echo 'export XMODIFIERS=@im=ibus'
-    echo 'export QT_IM_MODULE=ibus'
-
-    echo '# set IBus as the default input method'
-    echo 'export DefaultIMModule=ibus'
-    
-    echo '# Start IBus daemon automatically'
-    echo 'ibus-daemon -drx'
-} >> ~/.xprofile
-
-# Set keybinding for the next input method to <Control>space
-gsettings set org.freedesktop.ibus.general.hotkey triggers "['<Control>space']"
-
-# Configure input methods
-#gsettings set org.freedesktop.ibus.general preload-engines "['xkb:us::eng', 'xkb:vn::vie']"
-gsettings set org.freedesktop.ibus.general preload-engines "['BambooUs', 'Bamboo']"
-
-printf "%s%sInstall Vietnamese IME for IBus succesfully.%s\n" "${BLD}" "${GRN}" "${RST}"
-
-########## ---------- Install Neovim ---------- ##########
-title "Installing Neovim"
-
-check_install_dependencies "neovim"
-
-# Backup current nvim configs
-if [ -d "$HOME/.config/nvim" ]; then
-    if mv "$HOME/.config/nvim" "$backup_folder/nvim_$date" 2>> RiceError.log; then
-            printf "%s%snvim folder backed up successfully at %s%s/nvim_%s%s\n" "${BLD}" "${CGR}" "${CBL}" "$backup_folder" "$date" "${CNC}"
-            sleep 1
+    # Function to check and install fnm
+    install_fnm() {
+        if command -v fnm >/dev/null 2>&1; then
+            warning_msg "fnm is already installed"
         else
-            printf "%s%sFailed to backup nvim folder. See %sRiceError.log%s\n" "${BLD}" "${CRE}" "${CBL}" "${CNC}"
-            sleep 1
-    fi
+            installing_msg "Installing fnm..."
+            {
+                if curl -fsSL https://fnm.vercel.app/install | bash >/dev/null; then
+                    success_msg "Install fnm successfully"
+                fi
+                # Restart shell session to make fnm available in the current session
+                restart_shell_session
+            } || {
+                error_msg "Failed to install fnm. You may need to install it manually"
+                return 1
+            }
+        fi
+        return 0
+    }
+
+    # Install Node.js latest LTS version using fnm
+    if install_fnm; then
+        printf "\n"
+        installing_msg "Installing Node.js latest LTS version..."
+
+        # Attempt to install the latest LTS version of Node.js
+        if fnm install --lts >/dev/null 2>&1; then
+            success_msg "Node.js latest LTS installed successfully"
+        else
+            error_msg "Failed to install Node.js LTS. You may need to install it manually"
+        fi
     else
-        printf "%s%snvim folder does not exist, %sno backup needed%s\n" "${BLD}" "${CGR}" "${CYE}" "${CNC}"
-        sleep 1
-fi
+        error_msg "fnm is not installed. Please install fnm first"
+    fi
+}
 
-# Optionally uninstall previous nvim config
-rm -rf ~/.cache/nvim
-rm -rf ~/.local/share/nvim
-rm -rf ~/.local/state/nvim
+install_paru_helper() {
+    info_msg "Install Paru (AUR Helper)"
 
-# Clone my .zshrc and cleanup
-git clone git@github.com:ddat-tebayo/nvim-config.git ~/.config/nvim
-rm -rf ~/.config/nvim/.git
-rm -rf ~/.config/nvim/.github
+    if command -v paru >/dev/null 2>&1; then
+        warning_msg "Paru is already installed"
+    else
+        installing_msg "Installing paru..."
+        {
+            cd "$HOME" || exit
+            git clone --no-progress https://aur.archlinux.org/paru-bin.git
+            cd paru-bin || exit
+            makepkg -si --noconfirm
+            success_msg "Install paru (AUR helper) succesfully"
+            } || {
+            error_msg "Failed to install Paru. You may need to install it manually."
+        }
+    fi
+}
 
-printf "%s%sInstall neovim succesfully.%s\n" "${BLD}" "${GRN}" "${RST}"
+Vietnamese_ime_config() {
+    info_msg "Install a Vietnamese IME for IBus"
 
+    check_install_dependencies "ibus"
+
+    if command -v ibus >/dev/null 2>&1; then
+        installing_msg "Installing ibus-bamboo..."
+        if paru -S ibus-bamboo --noconfirm --nochroot --skipreview >/dev/null 2>&1; then
+            success_msg "Install ibus-bamboo successfully."
+        else
+            error_msg "Failed to install ibus-bamboo. You may need to install it manually."
+        fi
+    fi
+
+    if [ ! -f ~/.xprofile ]; then
+        touch ~/.xprofile
+        chmod 644 ~/.xprofile
+    fi
+
+    # Add necessary environment variables to ~/.xprofile
+    {
+        echo '# export IBus env and start IBus daemon'
+        echo 'export GTK_IM_MODULE=ibus'
+        echo 'export XMODIFIERS=@im=ibus'
+        echo 'export QT_IM_MODULE=ibus'
+        # set IBus as the default input method
+        echo 'export DefaultIMModule=ibus'
+        # Start IBus daemon automatically
+        echo 'ibus-daemon -drx'
+    } >> ~/.xprofile
+
+    printf "\n"
+
+    if gsettings set org.freedesktop.ibus.general.hotkey triggers "['<Control>space']" >/dev/null 2>> RiceError.log; then
+        success_msg "Set keybinding for the next input method to '<Control>space' successfully"
+    else
+        error_msg "Failed to set keybinding. See ~/RiceError.log for more details"
+    fi
+
+    #gsettings set org.freedesktop.ibus.general preload-engines "['xkb:us::eng', 'xkb:vn::vie']"
+    if gsettings set org.freedesktop.ibus.general preload-engines "['BambooUs', 'Bamboo']" >/dev/null 2>> RiceError.log; then
+        success_msg "Configure input methods successfully: Vietnamese - English"
+    else
+        error_msg "Failed to configure input methods. See ~/RiceError.log for more details"
+    fi
+    
+}
+
+clone_neovim_config() {
+    info_msg "Install neovim"
+
+    backup "$HOME/.config/nvim"
+
+    check_install_dependencies "neovim"
+
+    # Optionally uninstall previous nvim config
+    rm -rf ~/.cache/nvim
+    rm -rf ~/.local/share/nvim
+    rm -rf ~/.local/state/nvim
+
+    installing_msg "Cloning neovim-config from dotfiles repo..."
+    # Clone my .zshrc and cleanup
+    if git clone --no-progress https://github.com/ddat-tebayo/nvim-config.git ~/.config/nvim >/dev/null 2>&1; then
+        success_msg "Clone nvim-config from dotfiles repo successfully"
+        rm -rf ~/.config/nvim/.git
+        rm -rf ~/.config/nvim/.github
+    else
+        error_msg "Failed to clone nvim-config. You may need to install it manually."
+    fi
+}
+
+###########################################
+zsh_config
+clone_gitconfig
+install_fnm_nodes
+install_paru_helper
+Vietnamese_ime_config
+clone_neovim_config
