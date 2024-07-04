@@ -161,8 +161,39 @@ check_install_dependencies() {
 }
 
 ########## ---------- Functional components ---------- ##########
+change_shell_to_zsh() {
+    info_msg "Changing your default shell to zsh"
+
+    check_install_dependencies "zsh"
+
+    if [[ ! "$(basename "$SHELL")" = "zsh" ]]; then
+        warning_msg "Changing your shell to zsh. Your root password is needed"
+        # Change the shell to zsh
+        chsh -s "$(command -v zsh)"
+        success_msg "Shell changed to zsh."
+
+        # Prompt the user for a reboot
+        read -rp "\n$BLD$YLW Please reboot to apply changes and run this script again, reboot immediately? [y/N]: $RST" response
+        case "$response" in
+             [Yy]* )
+                warning_msg "Rebooting the system..."
+                sudo reboot
+                ;;
+            [Nn]* )
+                warning_msg "Please reboot your system manually to apply changes."
+                sleep 2
+                exit 0
+                ;;
+            *) error_msg "Error: just write 'y' or 'n'" ;;
+        esac
+    else
+        warning_msg "Your shell is already zsh!"
+	sleep 2
+    fi
+}
+
 zsh_config() {
-    info_msg "Install zsh and its plugins"
+    info_msg "Install and config zsh plugins"
 
     backup "$HOME/.zshrc"
 
@@ -176,9 +207,10 @@ zsh_config() {
     
     printf "\n"
 
-    check_install_dependencies "zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
+    check_install_dependencies "zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
 
-    success_msg "Install zsh and plugins succesfully"
+    success_msg "Install and config zsh plugins succesfully"
+    sleep 2
 }
 
 clone_gitconfig() {
@@ -193,6 +225,7 @@ clone_gitconfig() {
     else
         error_msg "Failed to clone .gitconfig"
     fi
+    sleep 2
 }
 
 install_fnm_nodes() {
@@ -207,7 +240,7 @@ install_fnm_nodes() {
         else
             installing_msg "Installing fnm..."
             {
-                if curl -fsSL https://fnm.vercel.app/install | bash >/dev/null; then
+                if curl -fsSL https://fnm.vercel.app/install | zsh >/dev/null; then
                     success_msg "Install fnm successfully"
                 fi
                 # Restart shell session to make fnm available in the current session
@@ -234,6 +267,7 @@ install_fnm_nodes() {
     else
         error_msg "fnm is not installed. Please install fnm first"
     fi
+    sleep 2
 }
 
 install_paru_helper() {
@@ -255,6 +289,7 @@ install_paru_helper() {
             error_msg "Failed to install Paru. You may need to install it manually."
         fi
     fi
+    sleep 2
 }
 
 Vietnamese_ime_config() {
@@ -302,7 +337,7 @@ Vietnamese_ime_config() {
     else
         error_msg "Failed to configure input methods. See ~/RiceError.log for more details"
     fi
-    
+    sleep 2
 }
 
 clone_neovim_config() {
@@ -329,6 +364,7 @@ clone_neovim_config() {
 }
 
 ###########################################
+change_shell_to_zsh
 zsh_config
 clone_gitconfig
 install_fnm_nodes
