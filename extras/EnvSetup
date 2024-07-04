@@ -171,21 +171,24 @@ change_shell_to_zsh() {
         # Change the shell to zsh
         chsh -s "$(command -v zsh)"
         success_msg "Shell changed to zsh."
+		printf "\n"
 
         # Prompt the user for a reboot
-        read -rp "\n$BLD$YLW Please reboot to apply changes and run this script again, reboot immediately? [y/N]: $RST" response
-        case "$response" in
-             [Yy]* )
-                warning_msg "Rebooting the system..."
-                sudo reboot
-                ;;
-            [Nn]* )
-                warning_msg "Please reboot your system manually to apply changes."
-                sleep 2
-                exit 0
-                ;;
-            *) error_msg "Error: just write 'y' or 'n'" ;;
-        esac
+		while true; do
+        	read -rp "$BLD$YLW Please reboot to apply changes and run this script again, reboot immediately? [y/N]: $RST" response
+        	case "$response" in
+             	[Yy]* )
+                	warning_msg "Rebooting the system..."
+                	sudo reboot
+                	;;
+            	[Nn]* )
+                	warning_msg "Please reboot your system manually to apply changes."
+                	sleep 2
+                	exit 0
+                	;;
+            	*) error_msg "Error: just write 'y' or 'n'" ;;
+        	esac
+		done
     else
         warning_msg "Your shell is already zsh!"
 	sleep 2
