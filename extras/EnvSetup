@@ -243,15 +243,17 @@ install_paru_helper() {
         warning_msg "Paru is already installed"
     else
         installing_msg "Installing paru..."
-        {
-            cd "$HOME" || exit
-            git clone --no-progress https://aur.archlinux.org/paru-bin.git
+        cd "$HOME" || exit
+        if git clone --no-progress https://aur.archlinux.org/paru-bin.git >/dev/null 2>&1; then
             cd paru-bin || exit
-            makepkg -si --noconfirm
-            success_msg "Install paru (AUR helper) succesfully"
-            } || {
+            if makepkg -si --noconfirm; then
+                success_msg "Install paru (AUR helper) succesfully"
+            else
+                error_msg "Failed to run makepkg"
+            fi
+        else
             error_msg "Failed to install Paru. You may need to install it manually."
-        }
+        fi
     fi
 }
 
