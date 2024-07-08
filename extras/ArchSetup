@@ -116,6 +116,8 @@ adjust_brightness() {
 
     success_msg "Adjust contrast to ${new_gamma} succesfully"
     success_msg "Adjust brightness to ${new_brightness_percent}% succesfully"
+
+    sleep 2
 }
 
 setup_audio() {
@@ -132,6 +134,8 @@ setup_audio() {
     systemctl --user start pipewire > /dev/null 2>> RiceError.log
 
     success_msg "Basic audio setup completed"
+
+    sleep 2
 }
 
 change_dns_server() {
@@ -143,6 +147,8 @@ change_dns_server() {
     else
         warning_msg "Google DNS server already configured"
     fi
+
+    sleep 2
 }
 
 config_touchpad() {
@@ -165,6 +171,8 @@ EOF
     else
         warning_msg "Touchpad configuration already existed"
     fi
+
+    sleep 2
 }
 
 install_and_configure_all() {
