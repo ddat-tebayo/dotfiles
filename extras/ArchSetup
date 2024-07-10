@@ -127,7 +127,7 @@ setup_audio() {
 
     #By default, ALSA has all channels muted. Those have to be unmuted manually.
     #Unmute with amixer
-    amixer sset Master unmute 100% > /dev/null 2>> RiceError.log
+    amixer sset Master unmute 100% > /dev/null
 
     #Enable and start pipewire
     systemctl --user enable pipewire > /dev/null 2>> RiceError.log
@@ -142,7 +142,7 @@ change_dns_server() {
     info_msg "Change default DNS server to Google DNS"
 
     if ! grep -q "static domain_name_servers=8.8.4.4 8.8.8.8" /etc/dhcpcd.conf; then
-        echo "static domain_name_servers=8.8.4.4 8.8.8.8" | sudo tee -a /etc/dhcpcd.conf > /dev/null 2>> RiceError.log
+        echo "static domain_name_servers=8.8.4.4 8.8.8.8" | sudo tee -a /etc/dhcpcd.conf > /dev/null
         success_msg "Change default DNS server successfully"
     else
         warning_msg "Google DNS server already configured"
@@ -157,7 +157,7 @@ config_touchpad() {
     local file_path="/etc/X11/xorg.conf.d/30-touchpad.conf"
 
     if [ ! -f "$file_path" ]; then
-        sudo tee "$file_path" > /dev/null 2>> RiceError.log << EOF
+        sudo tee "$file_path" > /dev/null << EOF
 Section "InputClass"
     Identifier "touchpad"
     Driver "libinput"
@@ -175,14 +175,26 @@ EOF
     sleep 2
 }
 
+connect_external_monitor()  {
+    info_msg "Connect to the external monitor immediately"
+
+    local INTERNAL_DISPLAY=$(xrandr | grep "connected primary" | awk '{print $1}')
+    local EXTERNAL_DISPLAY=$(xrandr | grep "connected" | grep -v "primary" | awk '{print $1}')
+
+    xrandr --output "$INTERNAL_DISPLAY" --auto --output "$EXTERNAL_DISPLAY" --auto --right-of "$INTERNAL_DISPLAY"
+
+    sleep 2
+}
+
 install_and_configure_all() {
     adjust_brightness
     setup_audio
     change_dns_server
     config_touchpad
+    connect_external_monitor
 
     printf "\n"
-    success_msg "Installation finished, reboot now!"
+    success_msg "Installation finished !"
 }
 
 ########## ---------- Main menu ---------- ##########
@@ -194,10 +206,11 @@ show_menu() {
     selection 2 "Setup audio/sound"
     selection 3 "Change default DNS server to Google DNS"
     selection 4 "Enable touchpad tapping, natural scrolling"
-    selection 5 "All"
-    selection 6 "Exit"
+    selection 5 "Connect to the external monitor immediately"
+    selection 6 "All"
+    selection 7 "Exit"
 
-    printf '\n%s%sEnter your choice [1-6]: %s' "${BLD}" "${YLW}" "${RST}"
+    printf '\n%s%sEnter your choice [1-7]: %s' "${BLD}" "${YLW}" "${RST}"
 }
 
 while true; do
@@ -208,8 +221,9 @@ while true; do
         2) setup_audio ;;
         3) change_dns_server ;;
         4) config_touchpad ;;
-        5) install_and_configure_all; break ;;
-        6) echo "Exiting..."; exit 0 ;;
+        5) connect_external_monitor ;;
+        6) install_and_configure_all; break ;;
+        7) echo "Exiting..."; exit 0 ;;
         *) echo "Invalid option, please try again." ;;
     esac
 done
