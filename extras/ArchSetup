@@ -127,7 +127,7 @@ adjust_brightness() {
         echo "$xgamma_command" | tee -a ~/.xprofile > /dev/null
         success_msg "Contrast adjusted to ${new_gamma} successfully"
     else
-        warning_msg "Contrast value already adjusted"
+        warning_msg "Contrast value already adjusted to ${new_gamma}"
     fi
 
     if $brightnessctl_command > /dev/null; then
