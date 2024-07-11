@@ -127,7 +127,7 @@ setup_audio() {
 
     #By default, ALSA has all channels muted. Those have to be unmuted manually.
     #Unmute with amixer
-    amixer sset Master unmute 100% > /dev/null
+    amixer sset Master unmute 50% > /dev/null
 
     #Enable and start pipewire
     systemctl --user enable pipewire > /dev/null 2>> RiceError.log
@@ -141,8 +141,10 @@ setup_audio() {
 change_dns_server() {
     info_msg "Change default DNS server to Google DNS"
 
-    if ! grep -q "static domain_name_servers=8.8.4.4 8.8.8.8" /etc/dhcpcd.conf; then
-        echo "static domain_name_servers=8.8.4.4 8.8.8.8" | sudo tee -a /etc/dhcpcd.conf > /dev/null
+    google_dns="static domain_name_servers=8.8.4.4 8.8.8.8"
+
+    if ! grep -Fxq "$google_dns" /etc/dhcpcd.conf; then
+        echo "$google_dns" | sudo tee -a /etc/dhcpcd.conf > /dev/null
         success_msg "Change default DNS server successfully"
     else
         warning_msg "Google DNS server already configured"
@@ -181,8 +183,10 @@ connect_external_monitor()  {
     local INTERNAL_DISPLAY=$(xrandr | grep "connected primary" | awk '{print $1}')
     local EXTERNAL_DISPLAY=$(xrandr | grep "connected" | grep -v "primary" | awk '{print $1}')
 
-    xrandr --output "$INTERNAL_DISPLAY" --auto --output "$EXTERNAL_DISPLAY" --auto --right-of "$INTERNAL_DISPLAY"
-
+    if xrandr --output "$INTERNAL_DISPLAY" --auto --output "$EXTERNAL_DISPLAY" --auto --right-of "$INTERNAL_DISPLAY"; then
+        success_msg "Connect to the external monitor successfully"
+    fi
+    
     sleep 2
 }
 
