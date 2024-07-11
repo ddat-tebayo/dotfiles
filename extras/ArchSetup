@@ -67,6 +67,7 @@ done
 clear
 
 ########## ---------- Utility Functions ---------- ##########
+
 check_install_dependencies() {
     local dependencies="$1"
     local missing=()
@@ -109,13 +110,29 @@ adjust_brightness() {
     # New values
     new_gamma=0.8
     new_brightness_percent=100
+       
+    # Command strings
+    xgamma_command="xgamma -gamma ${new_gamma}"
+    brightnessctl_command="brightnessctl s ${new_brightness_percent}%"
+
+    # Ensure .xprofile exists and is writable
+    if [ ! -f ~/.xprofile ]; then
+        touch ~/.xprofile
+        chmod 644 ~/.xprofile
+    fi
 
     # Apply new settings
-    xgamma -gamma ${new_gamma} > /dev/null 2>> RiceError.log
-    brightnessctl s ${new_brightness_percent}% > /dev/null 2>> RiceError.log
+    if ! grep -Fxq "$xgamma_command" ~/.xprofile && $xgamma_command 2> /dev/null; then
+        printf "\n# Set contrast correction to ${new_gamma}\n" | tee -a ~/.xprofile > /dev/null
+        echo "$xgamma_command" | tee -a ~/.xprofile > /dev/null
+        success_msg "Contrast adjusted to ${new_gamma} successfully"
+    else
+        warning_msg "Contrast value already adjusted"
+    fi
 
-    success_msg "Adjust contrast to ${new_gamma} succesfully"
-    success_msg "Adjust brightness to ${new_brightness_percent}% succesfully"
+    if $brightnessctl_command > /dev/null; then
+        success_msg "Brightness adjusted to ${new_brightness_percent}% successfully"
+    fi
 
     sleep 2
 }
