@@ -26,25 +26,19 @@ display_logo () {
 }
 
 info_msg() {
-    local text="${1:?}"
-    printf '\n\n%s%s[ %s ] %s\n\n' "${BLD}" "${BLU}" "${text}" "${RST}"
+    printf '\n\n%s%s[ %s ] %s\n\n' "${BLD}" "${BLU}" "${1:?}" "${RST}"
 }
 selection() {
-    local ordinal="${1:?}"
-    local text="${2:?}"
-    printf '%s%s%s)%s %s%s%s\n' "${BLD}" "${CYN}" "${ordinal}" "${RST}" "${WHT}" "${text}" "${RST}"
+    printf '%s%s%s)%s %s%s%s\n' "${BLD}" "${CYN}" "${1:?}" "${RST}" "${WHT}" "${2:?}" "${RST}"
 }
 success_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${1:?}" "${RST}"
 }
 warning_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${1:?}" "${RST}"
 }
 error_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${1:?}" "${RST}"
 }
 
 ########## ---------- Warning ---------- ##########
