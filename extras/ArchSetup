@@ -116,16 +116,23 @@ adjust_brightness() {
     fi
 
     # Apply new settings
-    if ! grep -Fxq "$xgamma_command" ~/.xprofile && $xgamma_command 2> /dev/null; then
-        printf "\n# Set contrast correction to ${new_gamma}\n" | tee -a ~/.xprofile > /dev/null
-        echo "$xgamma_command" | tee -a ~/.xprofile > /dev/null
-        success_msg "Contrast adjusted to ${new_gamma} successfully"
+    if $xgamma_command 2> /dev/null; then
+        if grep -Fq "xgamma -gamma" ~/.xprofile; then
+            sed -i "/xgamma -gamma/c\\$xgamma_command" ~/.xprofile
+            success_msg "Contrast adjusted to ${new_gamma} successfully"
+        else
+            printf "\n# Contrast adjustment\n" | tee -a ~/.xprofile > /dev/null
+            echo "$xgamma_command" | tee -a ~/.xprofile > /dev/null
+            success_msg "Contrast adjusted to ${new_gamma} successfully"
+        fi
     else
-        warning_msg "Contrast value already adjusted to ${new_gamma}"
+        error_msg "Failed to adjust contrast"
     fi
 
     if $brightnessctl_command > /dev/null; then
         success_msg "Brightness adjusted to ${new_brightness_percent}% successfully"
+    else
+        error_msg "Failed to adjust brightness"
     fi
 
     sleep 2
