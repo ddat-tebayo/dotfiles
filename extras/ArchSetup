@@ -34,6 +34,9 @@ selection() {
 success_msg() {
     printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${1:?}" "${RST}"
 }
+installing_msg() {
+    printf '%s%s %s %s\n' "${BLD}" "${WHT}" "${1:?}" "${RST}"
+}
 warning_msg() {
     printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${1:?}" "${RST}"
 }
@@ -61,6 +64,12 @@ done
 clear
 
 ########## ---------- Utility Functions ---------- ##########
+check_xprofile() {
+    if [ ! -f ~/.xprofile ]; then
+        touch ~/.xprofile
+        chmod 644 ~/.xprofile
+    fi
+}
 
 check_install_dependencies() {
     local dependencies="$1"
@@ -72,7 +81,7 @@ check_install_dependencies() {
     is_installed() {
         pacman -Q "$1" &> /dev/null
     }
-    printf '%s%s%s Checking for required packages...%s\n' "${BLD}" "${WHT}" "${text}" "${RST}"
+    installing_msg "Checking for required packages..."
     for package in "${deps[@]}"; do
         if ! is_installed "$package"; then
             missing+=("$package")
@@ -96,6 +105,59 @@ check_install_dependencies() {
     printf "\n"
 }
 ########## ---------- Functional components ---------- ##########
+Vietnamese_ime_config() {
+    info_msg "Install a Vietnamese IME for IBus"
+
+    check_install_dependencies "ibus"
+
+    if command -v ibus >/dev/null 2>&1; then
+        if ! is_installed "ibus-bamboo"; then
+            installing_msg "Installing ibus-bamboo..."
+            if paru -S ibus-bamboo --noconfirm --nochroot --skipreview >/dev/null 2>&1; then
+                success_msg "   Install ibus-bamboo successfully."
+            else
+                error_msg "   Failed to install ibus-bamboo. You may need to install it manually."
+            fi
+        else
+            warning_msg "   ibus-bamboo is already installed on your system!"
+        fi
+    fi
+
+    # Ensure .xprofile exists and is writable
+    check_xprofile
+
+    # Add necessary environment variables to ~/.xprofile
+    if ! grep -Fxq "# export IBus env and start IBus daemon" ~/.xprofile; then
+        {
+            printf '\n# export IBus env and start IBus daemon\n'
+            echo 'export GTK_IM_MODULE=ibus'
+            echo 'export XMODIFIERS=@im=ibus'
+            echo 'export QT_IM_MODULE=ibus'
+            # set IBus as the default input method
+            echo 'export DefaultIMModule=ibus'
+            # Start IBus daemon automatically
+            printf 'ibus-daemon -drx \n'
+        } | tee -a ~/.xprofile > /dev/null
+    fi
+
+    printf "\n"
+
+    if gsettings set org.freedesktop.ibus.general.hotkey triggers "['<Control>space']" >/dev/null 2>> RiceError.log; then
+        success_msg "Set keybinding for the next input method to '<Control>space' successfully"
+    else
+        error_msg "Failed to set keybinding. See ~/RiceError.log for more details"
+    fi
+
+    #gsettings set org.freedesktop.ibus.general preload-engines "['xkb:us::eng', 'xkb:vn::vie']"
+    if gsettings set org.freedesktop.ibus.general preload-engines "['BambooUs', 'Bamboo']" >/dev/null 2>> RiceError.log; then
+        success_msg "Configure input methods successfully: Vietnamese - English"
+    else
+        error_msg "Failed to configure input methods. See ~/RiceError.log for more details"
+    fi
+
+    sleep 2
+}
+
 adjust_brightness() {
     info_msg "Adjust contrast and brightness"
 
@@ -110,10 +172,7 @@ adjust_brightness() {
     brightnessctl_command="brightnessctl s ${new_brightness_percent}%"
 
     # Ensure .xprofile exists and is writable
-    if [ ! -f ~/.xprofile ]; then
-        touch ~/.xprofile
-        chmod 644 ~/.xprofile
-    fi
+    check_xprofile
 
     # Apply new settings
     if $xgamma_command 2> /dev/null; then
@@ -209,6 +268,7 @@ connect_external_monitor()  {
 }
 
 install_and_configure_all() {
+    Vietnamese_ime_config
     adjust_brightness
     setup_audio
     change_dns_server
@@ -224,28 +284,30 @@ show_menu() {
     display_logo
     info_msg "Select an option"
 
-    selection 1 "Adjust contrast and brightness"
-    selection 2 "Setup audio/sound"
-    selection 3 "Change default DNS server to Google DNS"
-    selection 4 "Enable touchpad tapping, natural scrolling"
-    selection 5 "Connect to the external monitor immediately"
-    selection 6 "All"
-    selection 7 "Exit"
+    selection 1 "Install a Vietnamese IME for IBus"
+    selection 2 "Adjust contrast and brightness"
+    selection 3 "Setup audio/sound"
+    selection 4 "Change default DNS server to Google DNS"
+    selection 5 "Enable touchpad tapping, natural scrolling"
+    selection 6 "Connect to the external monitor immediately"
+    selection 7 "All"
+    selection 8 "Exit"
 
-    printf '\n%s%sEnter your choice [1-7]: %s' "${BLD}" "${YLW}" "${RST}"
+    printf '\n%s%sEnter your choice [1-8]: %s' "${BLD}" "${YLW}" "${RST}"
 }
 
 while true; do
     show_menu
     read choice
     case $choice in
-        1) adjust_brightness ;;
-        2) setup_audio ;;
-        3) change_dns_server ;;
-        4) config_touchpad ;;
-        5) connect_external_monitor ;;
-        6) install_and_configure_all; break ;;
-        7) echo "Exiting..."; exit 0 ;;
+        1) Vietnamese_ime_config ;;
+        2) adjust_brightness ;;
+        3) setup_audio ;;
+        4) change_dns_server ;;
+        5) config_touchpad ;;
+        6) connect_external_monitor ;;
+        7) install_and_configure_all; break ;;
+        8) echo "Exiting..."; exit 0 ;;
         *) echo "Invalid option, please try again." ;;
     esac
 done
