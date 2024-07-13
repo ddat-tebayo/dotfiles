@@ -63,7 +63,9 @@ while true; do
 done
 clear
 
-########## ---------- Utility Functions ---------- ##########
+########## ---------- Utility Functions, Variables... ---------- ##########
+pacman_wrappers="paru" # https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
+
 check_xprofile() {
     if [ ! -f ~/.xprofile ]; then
         touch ~/.xprofile
@@ -82,22 +84,27 @@ check_install_dependencies() {
         pacman -Q "$1" &> /dev/null
     }
     installing_msg "Checking for required packages..."
+
     for package in "${deps[@]}"; do
         if ! is_installed "$package"; then
             missing+=("$package")
         else
-            warning_msg "   $package is already installed on your system!"
+            warning_msg "   '$package' is already installed on your system!"
             sleep 1
         fi
     done
 
     if [ ${#missing[@]} -gt 0 ]; then
         for package in "${missing[@]}"; do
-            if sudo pacman -S "$package" --noconfirm >/dev/null 2>> RiceError.log; then
-                success_msg "   $package has been installed successfully"
+            if sudo pacman -S "$package" --noconfirm >/dev/null 2>&1; then
+                success_msg "   '$package' has been installed successfully"
                 sleep 1
             else
-                error_msg "   $package has not been installed correctly. See RiceError.log for more details"
+                if $pacman_wrappers -S "$package" --noconfirm >/dev/null 2>&1 then
+                    success_msg "   '$package' has been installed successfully"
+                else
+                    error_msg "   Failed to install '$package'. You may need to install it manually"
+                fi
                 sleep 1
             fi
         done
@@ -109,18 +116,10 @@ Vietnamese_ime_config() {
     info_msg "Install a Vietnamese IME for IBus"
 
     check_install_dependencies "ibus"
+    restart_shell_session
 
     if command -v ibus >/dev/null 2>&1; then
-        if ! is_installed "ibus-bamboo"; then
-            installing_msg "Installing ibus-bamboo..."
-            if paru -S ibus-bamboo --noconfirm --nochroot --skipreview >/dev/null 2>&1; then
-                success_msg "   Install ibus-bamboo successfully."
-            else
-                error_msg "   Failed to install ibus-bamboo. You may need to install it manually."
-            fi
-        else
-            warning_msg "   ibus-bamboo is already installed on your system!"
-        fi
+        check_install_dependencies "ibus-bamboo"
     fi
 
     # Ensure .xprofile exists and is writable
