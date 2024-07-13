@@ -136,7 +136,7 @@ Vietnamese_ime_config() {
             # set IBus as the default input method
             echo 'export DefaultIMModule=ibus'
             # Start IBus daemon automatically
-            printf 'ibus-daemon -drx \n'
+            printf 'ibus-daemon -drx\n'
         } | tee -a ~/.xprofile > /dev/null
     fi
 
@@ -180,8 +180,10 @@ adjust_brightness() {
             sed -i "/xgamma -gamma/c\\$xgamma_command" ~/.xprofile
             success_msg "Contrast adjusted to ${new_gamma} successfully"
         else
-            printf "\n# Contrast adjustment\n" | tee -a ~/.xprofile > /dev/null
-            echo "$xgamma_command" | tee -a ~/.xprofile > /dev/null
+            {
+                printf "\n# Contrast adjustment\n"
+                printf "$xgamma_command\n" 
+            } | tee -a ~/.xprofile > /dev/null
             success_msg "Contrast adjusted to ${new_gamma} successfully"
         fi
     else
