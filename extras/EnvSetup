@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-dotfiles_path="https://raw.githubusercontent.com/ddat-tebayo/dotfiles/main/home"
-
 RED=$(tput setaf 1)
 GRN=$(tput setaf 2)
 YLW=$(tput setaf 3)
@@ -28,24 +26,19 @@ display_logo () {
 }
 
 info_msg() {
-    local text="${1:?}"
-    printf '\n\n%s%s[%s %s%s %s%s %s%s]%s\n\n' "${BLD}" "${RED}" "${RST}" "${BLD}" "${BLU}" "${text}" "${RST}" "${BLD}" "${RED}" "${RST}"
+    printf '\n\n%s%s[%s %s%s %s%s %s%s]%s\n\n' "${BLD}" "${RED}" "${RST}" "${BLD}" "${BLU}" "${1:?}" "${RST}" "${BLD}" "${RED}" "${RST}"
 }
 installing_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${WHT}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${WHT}" "${1:?}" "${RST}"
 }
 success_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${1:?}" "${RST}"
 }
 warning_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${1:?}" "${RST}"
 }
 error_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${1:?}" "${RST}"
 }
 
 ########## ---------- Warning ---------- ##########
@@ -75,7 +68,12 @@ while true; do
 done
 clear
 
-########## ---------- Utility Functions ---------- ##########
+display_logo
+
+########## ---------- Utility Functions, Variables... ---------- ##########
+dotfiles_path="https://raw.githubusercontent.com/ddat-tebayo/dotfiles/main/home"
+pacman_wrappers="paru" # https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
+
 backup() {
     local src=$1
     local backup_folder="$HOME/.RiceBackup"
@@ -86,14 +84,20 @@ backup() {
 
     mkdir -p "$backup_folder"
 
+    if [ -d "$src" ]; then
+        src_type="directory"
+    elif [ -f "$src" ]; then
+        src_type="file"
+    fi
+
     if [ -d "$src" ] || [ -f "$src" ]; then
         if mv "$src" "$dest" 2>> RiceError.log; then
-            success_msg "$base_name backed up successfully at $dest"
+            success_msg "The '$base_name' $src_type backed up successfully at $dest"
         else
-            error_msg "Failed to backup. See ~/RiceError.log"
+            error_msg "Failed to backup '$base_name' $src_type. See ~/RiceError.log"
         fi
     else
-        warning_msg "$base_name does not exist, no backup needed"
+        warning_msg "The '$base_name' $src_type does not exist, no backup needed"
     fi
     printf "\n"
 }
@@ -141,18 +145,18 @@ check_install_dependencies() {
         if ! is_installed "$package"; then
             missing+=("$package")
         else
-            warning_msg "   $package is already installed on your system!"
+            warning_msg "   '$package' is already installed on your system!"
             sleep 1
         fi
     done
 
     if [ ${#missing[@]} -gt 0 ]; then
         for package in "${missing[@]}"; do
-            if sudo pacman -S "$package" --noconfirm >/dev/null 2>> RiceError.log; then
-                success_msg "   $package has been installed successfully"
+            if $pacman_wrappers -S "$package" --noconfirm >/dev/null 2>&1 then
+                success_msg "   '$package' has been installed successfully"
                 sleep 1
             else
-                error_msg "   $package has not been installed correctly. See ~/RiceError.log for more details"
+                error_msg "   Failed to install '$package'. You may need to install it manually"
                 sleep 1
             fi
         done
@@ -161,8 +165,29 @@ check_install_dependencies() {
 }
 
 ########## ---------- Functional components ---------- ##########
+install_pacman_wrappers() {
+    if ! command -v $pacman_wrappers >/dev/null 2>&1; then
+        info_msg "Install $pacman_wrappers (AUR Helper)"
+        installing_msg "Installing $pacman_wrappers..."
+        {
+            cd "$HOME" || exit
+            git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
+            cd $pacman_wrappers || exit
+            makepkg -si --noconfirm
+            success_msg "   Install $pacman_wrappers (AUR helper) successfully"
+
+            restart_shell_session
+            sleep 2
+        } || {
+            error_msg "   Failed to install $pacman_wrappers. You may need to install it manually."
+            sleep 3
+            exit 1
+        }
+    fi
+}
+
 change_shell_to_zsh() {
-    info_msg "Changing your default shell to zsh"
+    info_msg "Change your default shell to zsh"
 
     check_install_dependencies "zsh"
 
@@ -191,43 +216,51 @@ change_shell_to_zsh() {
 		done
     else
         warning_msg "Your shell is already zsh!"
-	sleep 2
     fi
+
+	sleep 2
 }
 
-zsh_config() {
-    info_msg "Install and config zsh plugins"
+install_needed_packages() {
+    info_msg "Install needed fonts"
+    check_install_dependencies "noto-fonts noto-fonts-emoji noto-fonts-cjk noto-fonts-extra"
+    sleep 2
 
-    backup "$HOME/.zshrc"
+    info_msg "Install needed packages for image/audio/video"
+    check_install_dependencies "feh alsa-utils pipewire pipewire-alsa pipewire-jack pipewire-pulse ffmpeg zscroll-git"
+    sleep 2
 
-    installing_msg "Cloning .zshrc from dotfiles repo..."
-    if curl -fsSL $dotfiles_path/.zshrc -o $HOME/.zshrc;  then
-        success_msg "Clone .zshrc from dotfiles repo successfully"
-        chmod 644 ~/.zshrc
-    else
-        error_msg "Failed to clone .zshrc"
-    fi
-    
-    printf "\n"
+    info_msg "Install needed apps/tools"
+    check_install_dependencies "firefox google-chrome spotify spicetify-cli discord obsidian obs-studio telegram-desktop cool-retro-term unzip rar"
+    sleep 2
 
-    check_install_dependencies "zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
-
-    success_msg "Install and config zsh plugins succesfully"
+    info_msg "Install needed packages for development"
+    check_install_dependencies "openssh gnupg ripgrep visual-studio-code-bin neovide"
     sleep 2
 }
 
-clone_gitconfig() {
-    info_msg "Clone .gitconfig from dotfiles repo"
+clone_dot_config() {
+    info_msg "Clone some ~/.dotfiles from dotfiles repo"
 
-    backup "$HOME/.gitconfig"
+    for file in .zshrc .gitconfig .xprofile; do
+        if [ -f "$HOME/$file" ]; then
+            backup "$file"
+        fi
 
-    installing_msg "Cloning .gitconfig from dotfiles repo..."
-    if curl -fsSL $dotfiles_path/.gitconfig -o $HOME/.gitconfig; then
-        success_msg "Clone .gitconfig from dotfiles repo successfully"
-        chmod 644 ~/.gitconfig
-    else
-        error_msg "Failed to clone .gitconfig"
-    fi
+        if curl -fsSL $dotfiles_path/$file -o $HOME/$file; then
+            success_msg "Clone '$file' $src_t from dotfiles repo successfully"
+            chmod 644 $HOME/$file
+        else
+            error_msg "Failed to clone '$file' $src_t"
+        fi
+
+        printf "\n####################\n\n"
+        sleep 2
+    done
+
+    check_install_dependencies "zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
+
+    success_msg "Clone ~/.dotfiles from remote repository successfully"
     sleep 2
 }
 
@@ -263,82 +296,12 @@ install_fnm_nodes() {
 
         # Attempt to install the latest LTS version of Node.js
         if fnm install --lts >/dev/null 2>&1; then
-            success_msg "Node.js latest LTS installed successfully"
+            success_msg "   Node.js latest LTS installed successfully"
         else
-            error_msg "Failed to install Node.js LTS. You may need to install it manually"
+            error_msg "   Failed to install Node.js LTS. You may need to install it manually"
         fi
     else
         error_msg "fnm is not installed. Please install fnm first"
-    fi
-    sleep 2
-}
-
-install_paru_helper() {
-    info_msg "Install Paru (AUR Helper)"
-
-    if command -v paru >/dev/null 2>&1; then
-        warning_msg "Paru is already installed"
-    else
-        installing_msg "Installing paru..."
-        cd "$HOME" || exit
-        if git clone --no-progress https://aur.archlinux.org/paru-bin.git >/dev/null 2>&1; then
-            cd paru-bin || exit
-            if makepkg -si --noconfirm; then
-                success_msg "Install paru (AUR helper) succesfully"
-            else
-                error_msg "Failed to run makepkg"
-            fi
-        else
-            error_msg "Failed to install Paru. You may need to install it manually."
-        fi
-    fi
-    sleep 2
-}
-
-Vietnamese_ime_config() {
-    info_msg "Install a Vietnamese IME for IBus"
-
-    check_install_dependencies "ibus"
-
-    if command -v ibus >/dev/null 2>&1; then
-        installing_msg "Installing ibus-bamboo..."
-        if paru -S ibus-bamboo --noconfirm --nochroot --skipreview >/dev/null 2>&1; then
-            success_msg "Install ibus-bamboo successfully."
-        else
-            error_msg "Failed to install ibus-bamboo. You may need to install it manually."
-        fi
-    fi
-
-    if [ ! -f ~/.xprofile ]; then
-        touch ~/.xprofile
-        chmod 644 ~/.xprofile
-    fi
-
-    # Add necessary environment variables to ~/.xprofile
-    {
-        echo '# export IBus env and start IBus daemon'
-        echo 'export GTK_IM_MODULE=ibus'
-        echo 'export XMODIFIERS=@im=ibus'
-        echo 'export QT_IM_MODULE=ibus'
-        # set IBus as the default input method
-        echo 'export DefaultIMModule=ibus'
-        # Start IBus daemon automatically
-        echo 'ibus-daemon -drx'
-    } >> ~/.xprofile
-
-    printf "\n"
-
-    if gsettings set org.freedesktop.ibus.general.hotkey triggers "['<Control>space']" >/dev/null 2>> RiceError.log; then
-        success_msg "Set keybinding for the next input method to '<Control>space' successfully"
-    else
-        error_msg "Failed to set keybinding. See ~/RiceError.log for more details"
-    fi
-
-    #gsettings set org.freedesktop.ibus.general preload-engines "['xkb:us::eng', 'xkb:vn::vie']"
-    if gsettings set org.freedesktop.ibus.general preload-engines "['BambooUs', 'Bamboo']" >/dev/null 2>> RiceError.log; then
-        success_msg "Configure input methods successfully: Vietnamese - English"
-    else
-        error_msg "Failed to configure input methods. See ~/RiceError.log for more details"
     fi
     sleep 2
 }
@@ -358,19 +321,19 @@ clone_neovim_config() {
     installing_msg "Cloning neovim-config from dotfiles repo..."
     # Clone my .zshrc and cleanup
     if git clone --no-progress https://github.com/ddat-tebayo/nvim-config.git ~/.config/nvim >/dev/null 2>&1; then
-        success_msg "Clone nvim-config from dotfiles repo successfully"
+        success_msg "   Clone nvim-config from dotfiles repo successfully"
         rm -rf ~/.config/nvim/.git
         rm -rf ~/.config/nvim/.github
     else
-        error_msg "Failed to clone nvim-config. You may need to install it manually."
+        error_msg "   Failed to clone nvim-config. You may need to install it manually."
     fi
+    success_msg "Install neovim successfully"
 }
 
 ###########################################
+install_pacman_wrappers
 change_shell_to_zsh
-zsh_config
-clone_gitconfig
+install_needed_packages
+clone_dot_config
 install_fnm_nodes
-install_paru_helper
-Vietnamese_ime_config
 clone_neovim_config
