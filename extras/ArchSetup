@@ -63,9 +63,7 @@ while true; do
 done
 clear
 
-########## ---------- Utility Functions, Variables... ---------- ##########
-pacman_wrappers="paru" # https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
-
+########## ---------- Utility Functions ---------- ##########
 check_xprofile() {
     if [ ! -f ~/.xprofile ]; then
         touch ~/.xprofile
@@ -74,6 +72,9 @@ check_xprofile() {
 }
 
 check_install_dependencies() {
+    # https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
+    pacman_wrappers="paru"
+
     local dependencies="$1"
     local missing=()
 
@@ -96,15 +97,11 @@ check_install_dependencies() {
 
     if [ ${#missing[@]} -gt 0 ]; then
         for package in "${missing[@]}"; do
-            if sudo pacman -S "$package" --noconfirm >/dev/null 2>&1; then
+            if $pacman_wrappers -S "$package" --noconfirm >/dev/null 2>&1 then
                 success_msg "   '$package' has been installed successfully"
                 sleep 1
             else
-                if $pacman_wrappers -S "$package" --noconfirm >/dev/null 2>&1 then
-                    success_msg "   '$package' has been installed successfully"
-                else
-                    error_msg "   Failed to install '$package'. You may need to install it manually"
-                fi
+                error_msg "   Failed to install '$package'. You may need to install it manually"
                 sleep 1
             fi
         done
