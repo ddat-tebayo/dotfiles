@@ -38,7 +38,7 @@ warning_msg() {
     printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${1:?}" "${RST}"
 }
 error_msg() {
-    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${1:?}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${1:?}" "${RST}" | tee -a ~/RiceError.log
 }
 
 ########## ---------- Warning ---------- ##########
@@ -152,7 +152,7 @@ check_install_dependencies() {
 
     if [ ${#missing[@]} -gt 0 ]; then
         for package in "${missing[@]}"; do
-            if $pacman_wrappers -S "$package" --noconfirm >/dev/null 2>&1 then
+            if $pacman_wrappers -S "$package" --noconfirm --skipreview >/dev/null 2>&1; then
                 success_msg "   '$package' has been installed successfully"
                 sleep 1
             else
@@ -166,24 +166,26 @@ check_install_dependencies() {
 
 ########## ---------- Functional components ---------- ##########
 install_pacman_wrappers() {
-    if ! command -v $pacman_wrappers >/dev/null 2>&1; then
-        info_msg "Install $pacman_wrappers (AUR Helper)"
-        installing_msg "Installing $pacman_wrappers..."
-        {
-            cd "$HOME" || exit
-            git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
-            cd $pacman_wrappers || exit
-            makepkg -si --noconfirm
-            success_msg "   Install $pacman_wrappers (AUR helper) successfully"
+if ! command -v $pacman_wrappers >/dev/null 2>&1; then
+    info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
+    installing_msg "Installing $pacman_wrappers..."
+    {
+        sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
 
-            restart_shell_session
-            sleep 2
-        } || {
-            error_msg "   Failed to install $pacman_wrappers. You may need to install it manually."
-            sleep 3
-            exit 1
-        }
-    fi
+        cd "$HOME" || exit
+        git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
+        cd $pacman_wrappers || exit
+        makepkg -si --noconfirm >/dev/null 2>&1
+        success_msg "   Install $pacman_wrappers (AUR helper) successfully"
+
+        restart_shell_session
+        sleep 2
+    } || {
+        error_msg "   Failed to install $pacman_wrappers. You may need to install it manually."
+        sleep 3
+        exit 1
+    }
+fi
 }
 
 change_shell_to_zsh() {
@@ -226,16 +228,16 @@ install_needed_packages() {
     check_install_dependencies "noto-fonts noto-fonts-emoji noto-fonts-cjk noto-fonts-extra"
     sleep 2
 
-    info_msg "Install needed packages for image/audio/video"
-    check_install_dependencies "feh alsa-utils pipewire pipewire-alsa pipewire-jack pipewire-pulse ffmpeg zscroll-git"
+    info_msg "Install needed packages for using"
+    check_install_dependencies "alsa-utils pipewire pipewire-alsa pipewire-jack pipewire-pulse mpv unzip rar"
     sleep 2
 
-    info_msg "Install needed apps/tools"
-    check_install_dependencies "firefox google-chrome spotify spicetify-cli discord obsidian obs-studio telegram-desktop cool-retro-term unzip rar"
+    info_msg "Install needed apps"
+    check_install_dependencies "firefox google-chrome discord obsidian obs-studio telegram-desktop"
     sleep 2
 
     info_msg "Install needed packages for development"
-    check_install_dependencies "openssh gnupg ripgrep visual-studio-code-bin neovide"
+    check_install_dependencies "bat eza starship openssh gnupg ripgrep visual-studio-code-bin"
     sleep 2
 }
 
@@ -311,7 +313,7 @@ clone_neovim_config() {
 
     backup "$HOME/.config/nvim"
 
-    check_install_dependencies "neovim"
+    check_install_dependencies "neovim neovide"
 
     # Optionally uninstall previous nvim config
     rm -rf ~/.cache/nvim
