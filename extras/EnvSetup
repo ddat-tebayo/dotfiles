@@ -170,8 +170,11 @@ if ! command -v $pacman_wrappers >/dev/null 2>&1; then
     info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
     installing_msg "Installing $pacman_wrappers..."
     {
+        # Install rustup, cargo, rustc... before installing paru
         sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
+        rustup default stable
 
+        # Install paru
         cd "$HOME" || exit
         git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
         cd $pacman_wrappers || exit
