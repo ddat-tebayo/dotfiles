@@ -84,14 +84,12 @@ check_install_dependencies() {
     is_installed() {
         pacman -Q "$1" &> /dev/null
     }
-    installing_msg "Checking for required packages..."
 
     for package in "${deps[@]}"; do
         if ! is_installed "$package"; then
             missing+=("$package")
         else
             warning_msg "   '$package' is already installed on your system!"
-            sleep 1
         fi
     done
 
@@ -99,10 +97,8 @@ check_install_dependencies() {
         for package in "${missing[@]}"; do
             if $pacman_wrappers -S "$package" --noconfirm >/dev/null 2>&1; then
                 success_msg "   '$package' has been installed successfully"
-                sleep 1
             else
                 error_msg "   Failed to install '$package'. You may need to install it manually"
-                sleep 1
             fi
         done
     fi
@@ -112,6 +108,7 @@ check_install_dependencies() {
 Vietnamese_ime_config() {
     info_msg "Install a Vietnamese IME for IBus"
 
+	installing_msg "Checking for required packages..."
     check_install_dependencies "ibus"
 
     if command -v ibus >/dev/null 2>&1; then
@@ -156,6 +153,7 @@ Vietnamese_ime_config() {
 adjust_brightness() {
     info_msg "Adjust contrast and brightness"
 
+	installing_msg "Checking for required packages..."
     check_install_dependencies "xorg-xgamma brightnessctl"
 
     # New values
@@ -197,6 +195,7 @@ adjust_brightness() {
 setup_audio() {
     info_msg "Setup audio/sound"
 
+	installing_msg "Checking for required packages..."
     check_install_dependencies "alsa-utils pipewire pipewire-alsa pipewire-jack pipewire-pulse"
 
     #By default, ALSA has all channels muted. Those have to be unmuted manually.
