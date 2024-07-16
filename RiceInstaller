@@ -35,28 +35,24 @@ display_logo () {
 }
 
 info_msg() {
-    local text="${1:?}"
-    printf '\n\n%s%s[%s %s%s %s%s %s%s]%s\n\n' "${BLD}" "${RED}" "${RST}" "${BLD}" "${BLU}" "${text}" "${RST}" "${BLD}" "${RED}" "${RST}"
+    printf '\n\n%s%s[%s %s%s %s%s %s%s]%s\n\n' "${BLD}" "${RED}" "${RST}" "${BLD}" "${BLU}" "${1:?}" "${RST}" "${BLD}" "${RED}" "${RST}"
 }
 installing_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${WHT}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${WHT}" "${1:?}" "${RST}"
 }
 success_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${GRN}" "${1:?}" "${RST}"
 }
 warning_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${YLW}" "${1:?}" "${RST}"
 }
 error_msg() {
-    local text="${1:?}"
-    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${text}" "${RST}"
+    printf '%s%s %s %s\n' "${BLD}" "${RED}" "${1:?}" "${RST}" | tee -a ~/RiceError.log
 }
 
 ########## ---------- Warning ---------- ##########
 display_logo
+info_msg "Welcome!"
 
 if [ "$(id -u)" = 0 ]; then
     warning_msg "This script MUST NOT be run as root user"
@@ -71,8 +67,6 @@ if [ "$current_dir" != "$home_dir" ]; then
     exit 1
 fi
 
-info_msg "Welcome!"
-
 printf '%s%sThis script will:\n%s- Check for necessary dependencies and install any that are missing.\n- Clone my repository into your HOME directory, backs up your files, and copies new files.\n- DO NOT modify any of your system configurations.\n- Need your root password to install missing dependencies.\n%s\n\n' "${BLD}" "${BLU}" "${RST}"
 
 while true; do
@@ -85,7 +79,9 @@ while true; do
 done
 clear
 
-########## ---------- Utility Functions ---------- ##########
+display_logo
+
+########## ---------- Utility ---------- ##########
 backup() {
     local src=$1
     local backup_folder="$HOME/.RiceBackup"
@@ -96,18 +92,22 @@ backup() {
 
     mkdir -p "$backup_folder"
 
+    if [ -d "$src" ]; then
+        src_type="directory"
+    elif [ -f "$src" ]; then
+        src_type="file"
+    fi
+
     if [ -d "$src" ] || [ -f "$src" ]; then
         if mv "$src" "$dest" 2>> RiceError.log; then
-            success_msg "$base_name backed up successfully at $dest"
-            sleep 1
+            success_msg "The '$base_name' $src_type backed up successfully at $dest"
         else
-            error_msg "Failed to backup. See ~/RiceError.log"
-            sleep 1
+            error_msg "Failed to backup '$base_name' $src_type. See ~/RiceError.log"
         fi
     else
-        warning_msg "$base_name does not exist, no backup needed"
-        sleep 1
+        warning_msg "The '$base_name' $src_type does not exist, no backup needed"
     fi
+    printf "\n"
 }
 
 copy_from_dotfiles() {
@@ -126,11 +126,34 @@ copy_from_dotfiles() {
 
 ########## ---------- Install packages ---------- ##########
 display_logo 
-info_msg "Installing needed packages.."
 
-dependencies=(alacritty base-devel brightnessctl bspwm dunst eza feh firefox git imagemagick jq jgmenu kitty libwebp maim \
-                mpc mpd mpv neofetch ncmpcpp picom playerctl polybar ranger \
-                rofi starship rustup sxhkd ueberzug webp-pixbuf-loader xclip xdg-user-dirs)
+pacman_wrappers="paru" # https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
+if ! command -v $pacman_wrappers >/dev/null 2>&1; then
+    info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
+    installing_msg "Installing $pacman_wrappers..."
+    {
+        sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
+
+        cd "$HOME" || exit
+        git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
+        cd $pacman_wrappers || exit
+        makepkg -si --noconfirm >/dev/null 2>&1
+        success_msg "   Install $pacman_wrappers (AUR helper) successfully"
+
+        restart_shell_session
+        sleep 2
+    } || {
+        error_msg "   Failed to install $pacman_wrappers. You may need to install it manually."
+        sleep 3
+        exit 1
+    }
+fi
+
+info_msg "Install needed packages.."
+dependencies=(alacritty brightnessctl bspwm cool-retro-term dunst feh firefox imagemagick jq jgmenu kitty libwebp maim \
+                mpc mpd neofetch ncmpcpp picom playerctl polybar ranger \
+                rofi sxhkd ttf-jetbrains-mono ttf-jetbrains-mono-nerd \
+		ueberzug webp-pixbuf-loader xclip xdg-user-dirs)
 
 is_installed() {
     pacman -Q "$1" &> /dev/null
@@ -139,15 +162,15 @@ is_installed() {
 installing_msg "Checking for required packages..."
 for package in "${dependencies[@]}"; do
     if ! is_installed "$package"; then
-        if sudo pacman -S "$package" --noconfirm >/dev/null 2>> RiceError.log; then
-            success_msg "   $package has been installed successfully"
+        if $pacman_wrappers -S "$package" --noconfirm --skipreview >/dev/null 2>&1; then
+            success_msg "   '$package' has been installed successfully"
             sleep 1
         else
-            error_msg "   $package has not been installed correctly. See RiceError.log for more details"
+            error_msg "   Failed to install '$package'. You may need to install it manually"
             sleep 1
         fi
     else
-        warning_msg "   $package is already installed on your system!"
+        warning_msg "   '$package' is already installed on your system!"
         sleep 1
     fi
 done
@@ -217,26 +240,7 @@ copy_from_dotfiles "$repo_dir/.local/bin/" "$HOME/.local/"
 
 fc-cache -rv >/dev/null 2>&1
 sleep 2
-# ########## ---------- Install Paru & others ---------- ##########
-
-info_msg "Install Paru (AUR Helper)"
-
-if command -v paru >/dev/null 2>&1; then
-    warning_msg "Paru is already installed"
-else
-    installing_msg "Installing paru..."
-    {
-        cd "$HOME" || exit
-        git clone https://aur.archlinux.org/paru-bin.git
-        cd paru-bin || exit
-        makepkg -si --noconfirm
-        success_msg "Install paru (AUR helper) succesfully"
-        } || {
-        error_msg "Failed to install Paru. You may need to install it manually."
-    }
-fi
-sleep 2
-
+# ########## ---------- Install others ---------- ##########
 info_msg "Install tdrop for scratchpads"
 
 if command -v tdrop >/dev/null 2>&1; then
