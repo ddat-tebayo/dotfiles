@@ -157,29 +157,30 @@ check_install_dependencies() {
 
 ########## ---------- Functional components ---------- ##########
 install_pacman_wrappers() {
-if ! command -v $pacman_wrappers >/dev/null 2>&1; then
-    info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
-    installing_msg "Installing $pacman_wrappers..."
-    {
-        # Install rustup, cargo, rustc... before installing paru
-        sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
-        rustup default stable >/dev/null
+    if ! command -v $pacman_wrappers >/dev/null 2>&1; then
+        info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
+        installing_msg "Installing $pacman_wrappers..."
+        {
+            # Install rustup, cargo, rustc... before installing paru
+            sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
+            rustup default stable >/dev/null
 
-        # Install paru
-        cd "$HOME" || exit
-        git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
-        cd $pacman_wrappers || exit
-        makepkg -si --noconfirm >/dev/null 2>&1
-        success_msg "   Install $pacman_wrappers (AUR helper) successfully"
+            # Install paru
+            cd "$HOME" || exit
+            git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
+            cd $pacman_wrappers || exit
+            makepkg -si --noconfirm >/dev/null 2>&1
+            success_msg "   Install $pacman_wrappers (AUR helper) successfully"
 
-        restart_shell_session
-        sleep 2
-    } || {
-        error_msg "   Failed to install $pacman_wrappers. You may need to install it manually."
-        sleep 3
-        exit 1
-    }
-fi
+            restart_shell_session
+            sleep 2
+        } || {
+            error_msg "   Failed to install $pacman_wrappers. You may need to install it manually."
+            sleep 3
+            exit 1
+        }
+    fi
+}
 }
 
 change_shell_to_zsh() {
