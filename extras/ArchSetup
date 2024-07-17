@@ -204,8 +204,6 @@ setup_audio() {
         error_msg "Failed to start pipewire. You may need to enable it manually."
     fi
 
-    success_msg "Basic audio setup completed"
-
     sleep 2
 }
 
