@@ -132,8 +132,11 @@ if ! command -v $pacman_wrappers >/dev/null 2>&1; then
     info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
     installing_msg "Installing $pacman_wrappers..."
     {
+        # Install rustup, cargo, rustc... before installing paru
         sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
+        rustup default stable >/dev/null 2>&1
 
+        # Install paru
         cd "$HOME" || exit
         git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
         cd $pacman_wrappers || exit
@@ -152,7 +155,7 @@ fi
 info_msg "Install needed packages.."
 dependencies=(alacritty brightnessctl bspwm cool-retro-term dunst feh firefox imagemagick jq jgmenu kitty libwebp maim \
                 mpc mpd neofetch ncmpcpp picom playerctl polybar ranger \
-                rofi sxhkd ttf-jetbrains-mono ttf-jetbrains-mono-nerd \
+                rofi starship sxhkd ttf-jetbrains-mono ttf-jetbrains-mono-nerd \
 		ueberzug webp-pixbuf-loader xclip xdg-user-dirs)
 
 is_installed() {
@@ -285,7 +288,7 @@ sleep 2
 
 # ########## ---------- Enable MPD service ---------- ##########
 
-logo "Enable mpd service"
+info_msg "Enable mpd service"
 
 # Check if the mpd service is enabled at the global (system) level
 if systemctl is-enabled --quiet mpd.service; then
