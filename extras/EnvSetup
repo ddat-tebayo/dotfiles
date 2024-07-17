@@ -146,7 +146,6 @@ check_install_dependencies() {
             missing+=("$package")
         else
             warning_msg "   '$package' is already installed on your system!"
-            sleep 1
         fi
     done
 
@@ -154,10 +153,8 @@ check_install_dependencies() {
         for package in "${missing[@]}"; do
             if $pacman_wrappers -S "$package" --noconfirm --skipreview >/dev/null 2>&1; then
                 success_msg "   '$package' has been installed successfully"
-                sleep 1
             else
                 error_msg "   Failed to install '$package'. You may need to install it manually"
-                sleep 1
             fi
         done
     fi
@@ -240,7 +237,7 @@ install_needed_packages() {
     sleep 2
 
     info_msg "Install needed packages for development"
-    check_install_dependencies "bat eza starship openssh gnupg ripgrep visual-studio-code-bin"
+    check_install_dependencies "bat eza openssh ripgrep visual-studio-code-bin"
     sleep 2
 }
 
@@ -335,6 +332,54 @@ clone_neovim_config() {
     success_msg "Install neovim successfully"
 }
 
+install_spotify() {
+    info_msg "Install spotify, spicetify-cli, zscroll"
+
+    installing_msg "Installing spotify..."
+    if $pacman_wrappers -S spotify --noconfirm >/dev/null 2>&1; then
+        # Before applying Spicetify, you need to gain write permission on Spotify files
+        sudo chmod a+wr /opt/spotify
+        sudo chmod a+wr /opt/spotify/Apps -R
+
+        success_msg "   Install and config spotify successfully"
+    else
+        error_msg "   Failed to clone spotify. You may need to install it manually."
+    fi
+
+    installing_msg "Installing spicetify-cli..."
+    if $pacman_wrappers -S spicetify-cli --noconfirm >/dev/null 2>&1; then
+        # Run with no command once to generate config file
+        spicetify >/dev/null
+
+        # Download and apply theme, colorscheme
+        cd $HOME/.config/spicetify/
+        git clone --depth=1 https://github.com/spicetify/spicetify-themes.git
+        cd spicetify-themes
+        mv * ~/.config/spicetify/Themes/
+        cd $HOME && rm -rf ~/.config/spicetify/spicetify-themes/
+
+        spicetify backup
+        spicetify config current_theme Dribbblish
+        spicetify config color_scheme Base
+        spicetify apply
+
+        success_msg "   Install and config spicetify-cli successfully"
+    else
+        error_msg "   Failed to clone spicetify-cli. You may need to install it manually."
+    fi
+    
+    installing_msg "Installing zscroll..."
+    # Get current Python version
+    current_version=$(python3 --version 2>&1 | awk '{print $2}')
+
+    # Check if the version matches 3.12.*
+    if [[ $current_version == 3.12.* ]]; then
+        $pacman_wrappers -S python-setuptools --noconfirm >/dev/null 2>&1
+    fi
+
+    check_install_dependencies "zscroll-git"
+}
+
 ###########################################
 install_pacman_wrappers
 change_shell_to_zsh
@@ -342,3 +387,4 @@ install_needed_packages
 clone_dot_config
 install_fnm_nodes
 clone_neovim_config
+install_spotify
