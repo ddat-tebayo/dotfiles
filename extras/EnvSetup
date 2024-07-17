@@ -84,20 +84,14 @@ backup() {
 
     mkdir -p "$backup_folder"
 
-    if [ -d "$src" ]; then
-        src_type="directory"
-    elif [ -f "$src" ]; then
-        src_type="file"
-    fi
-
     if [ -d "$src" ] || [ -f "$src" ]; then
         if mv "$src" "$dest" 2>> RiceError.log; then
-            success_msg "The '$base_name' $src_type backed up successfully at $dest"
+            success_msg "'$base_name' backed up successfully at $dest"
         else
-            error_msg "Failed to backup '$base_name' $src_type. See ~/RiceError.log"
+            error_msg "Failed to backup '$base_name'. See ~/RiceError.log"
         fi
     else
-        warning_msg "The '$base_name' $src_type does not exist, no backup needed"
+        warning_msg "'$base_name' does not exist, no backup needed"
     fi
     printf "\n"
 }
@@ -169,7 +163,7 @@ if ! command -v $pacman_wrappers >/dev/null 2>&1; then
     {
         # Install rustup, cargo, rustc... before installing paru
         sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
-        rustup default stable >/dev/null 2>&1
+        rustup default stable >/dev/null
 
         # Install paru
         cd "$HOME" || exit
@@ -249,15 +243,8 @@ clone_dot_config() {
             backup "$file"
         fi
 
-        if curl -fsSL $dotfiles_path/$file -o $HOME/$file; then
-            success_msg "Clone '$file' $src_t from dotfiles repo successfully"
-            chmod 644 $HOME/$file
-        else
-            error_msg "Failed to clone '$file' $src_t"
-        fi
-
-        printf "\n####################\n\n"
-        sleep 2
+        curl -fsSL $dotfiles_path/$file -o $HOME/$file
+        chmod 644 $HOME/$file
     done
 
     check_install_dependencies "zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
@@ -278,17 +265,14 @@ install_fnm_nodes() {
         else
             installing_msg "Installing fnm..."
             {
-                if curl -fsSL https://fnm.vercel.app/install | zsh >/dev/null; then
-                    success_msg "Install fnm successfully"
-                fi
+                curl -fsSL https://fnm.vercel.app/install | zsh >/dev/null
+                success_msg "Install fnm successfully"
                 # Restart shell session to make fnm available in the current session
                 restart_shell_session
             } || {
                 error_msg "Failed to install fnm. You may need to install it manually"
-                return 1
             }
         fi
-        return 0
     }
 
     # Install Node.js latest LTS version using fnm
@@ -322,65 +306,14 @@ clone_neovim_config() {
 
     installing_msg "Cloning neovim-config from dotfiles repo..."
     # Clone my .zshrc and cleanup
-    if git clone --no-progress https://github.com/ddat-tebayo/nvim-config.git ~/.config/nvim >/dev/null 2>&1; then
-        success_msg "   Clone nvim-config from dotfiles repo successfully"
+    {
+        git clone --no-progress https://github.com/ddat-tebayo/nvim-config.git ~/.config/nvim >/dev/null 2>&1
         rm -rf ~/.config/nvim/.git
         rm -rf ~/.config/nvim/.github
-    else
+        success_msg "Install neovim successfully"
+    } || {
         error_msg "   Failed to clone nvim-config. You may need to install it manually."
-    fi
-    success_msg "Install neovim successfully"
-}
-
-install_spotify() {
-    info_msg "Install spotify, spicetify-cli, zscroll"
-
-    installing_msg "Installing spotify..."
-    if $pacman_wrappers -S spotify --noconfirm >/dev/null 2>&1; then
-        # Before applying Spicetify, you need to gain write permission on Spotify files
-        sudo chmod a+wr /opt/spotify
-        sudo chmod a+wr /opt/spotify/Apps -R
-
-        spotify
-
-        success_msg "   Install and config spotify successfully"
-    else
-        error_msg "   Failed to clone spotify. You may need to install it manually."
-    fi
-
-    installing_msg "Installing spicetify-cli..."
-    if $pacman_wrappers -S spicetify-cli --noconfirm >/dev/null 2>&1; then
-        # Run with no command once to generate config file
-        spicetify >/dev/null
-
-        # Download and apply theme, colorscheme
-        cd $HOME/.config/spicetify/
-        git clone --depth=1 https://github.com/spicetify/spicetify-themes.git
-        cd spicetify-themes
-        mv * ~/.config/spicetify/Themes/
-        cd $HOME && rm -rf ~/.config/spicetify/spicetify-themes/
-
-        spicetify config spotify_path "/opt/spotify/"
-        spicetify config prefs_path "$HOME/.config/spotify/prefs"
-        spicetify config current_theme Dribbblish
-        spicetify config color_scheme Base
-        spicetify apply
-
-        success_msg "   Install and config spicetify-cli successfully"
-    else
-        error_msg "   Failed to clone spicetify-cli. You may need to install it manually."
-    fi
-    
-    installing_msg "Installing zscroll..."
-    # Get current Python version
-    current_version=$(python3 --version 2>&1 | awk '{print $2}')
-
-    # Check if the version matches 3.12.*
-    if [[ $current_version == 3.12.* ]]; then
-        $pacman_wrappers -S python-setuptools --noconfirm >/dev/null 2>&1
-    fi
-
-    check_install_dependencies "zscroll-git"
+    }
 }
 
 ###########################################
@@ -390,4 +323,3 @@ install_needed_packages
 clone_dot_config
 install_fnm_nodes
 clone_neovim_config
-install_spotify
