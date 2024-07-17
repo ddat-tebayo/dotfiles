@@ -198,8 +198,11 @@ setup_audio() {
     amixer sset Master unmute 50% > /dev/null
 
     #Enable and start pipewire
-    systemctl --user enable pipewire > /dev/null 2>> RiceError.log
-    systemctl --user start pipewire > /dev/null 2>> RiceError.log
+    if systemctl --user enable pipewire > /dev/null 2>&1 && systemctl --user start pipewire > /dev/null 2>&1; then
+        success_msg "Basic audio setup completed"
+    else
+        error_msg "Failed to start pipewire. You may need to enable it manually."
+    fi
 
     success_msg "Basic audio setup completed"
 
