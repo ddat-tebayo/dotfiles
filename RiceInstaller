@@ -244,30 +244,70 @@ copy_the_rice() {
     sleep 2
 }
 
-enable_needed_services() {
-    ##### Enable MPD service #####
+install_needed_apps() {
+    {
+        info_msg "Install zscroll (scroll the currently playing mpd song)"
+        installing_msg "Installing zscroll dependencies..."
 
-    info_msg "Enable mpd service"
-    # Check if the mpd service is enabled at the global (system) level
-    if systemctl is-enabled --quiet mpd.service; then
-        warning_msg "Disabling and stopping the global mpd service"
-        sudo systemctl stop mpd.service
-        sudo systemctl disable mpd.service
-    fi
-    installing_msg "Enabling and starting the user-level mpd service"
-    systemctl --user enable --now mpd.service
-    success_msg "Enable mpd service successfully"
+        # Install python-setuptools to address 'distutils' deprecation in Python 3.12
+        # Get current Python version
+        current_version=$(python3 --version 2>&1 | awk '{print $2}')
+
+        # Check if the version matches 3.12.*
+        if [[ $current_version == 3.12.* ]]; then
+            if $pacman_wrappers -S python-setuptools --noconfirm >/dev/null 2>&1; then
+                success_msg "   'python-setuptools' has been installed successfully"
+            else
+                error_msg "   Failed to install 'python-setuptools'. You may need to install it manually"
+            fi
+        fi
+
+        check_install_dependencies "zscroll-git"
+        sleep 2
+    }
+
+    {
+        info_msg "Install starship"
+        check_install_dependencies "starship"
+
+        if ! grep -Fxq "# export starship environment variable" ~/.zshrc; then
+        {
+            printf '\n# export starship environment variable\n'
+            printf 'eval "$(starship init zsh)"\n'
+            printf 'export STARSHIP_CONFIG=~/.config/punk_records/starship.toml\n'
+        } | tee -a ~/.zshrc > /dev/null
+        fi
+        sleep 2
+    }
+}
+enable_needed_services() {
+    {
+        ##### Enable MPD service #####
+
+        info_msg "Enable mpd service"
+        # Check if the mpd service is enabled at the global (system) level
+        if systemctl is-enabled --quiet mpd.service; then
+            warning_msg "Disabling and stopping the global mpd service"
+            sudo systemctl stop mpd.service
+            sudo systemctl disable mpd.service
+        fi
+        installing_msg "Enabling and starting the user-level mpd service"
+        systemctl --user enable --now mpd.service
+        success_msg "Enable mpd service successfully"
+    }
 }
 
 ####################################################
 install_pacman_wrappers # Install paru
 
 # Install needed packages
-check_install_dependencies "alacritty brightnessctl bspwm dunst feh firefox kitty mpc mpd neofetch ncmpcpp picom \
-polybar ranger rofi starship sxhkd ttf-jetbrains-mono ttf-jetbrains-mono-nerd xdg-user-dirs"
+check_install_dependencies "alacritty brightnessctl bspwm \
+dunst feh firefox kitty mpc mpd neofetch ncmpcpp picom \
+polybar ranger rofi sxhkd ttf-jetbrains-mono ttf-jetbrains-mono-nerd xdg-user-dirs"
 
 prepare_folder # Prepare Folders
 clone_the_rice # Clone the Rice!
 backup_old_config # Backup old config, store in ~/.RiceBackup
 copy_the_rice # Copy files and dirs to their respective directories.
+install_needed_apps # Install and config needed apps/tools
 enable_needed_services # Enable/Start needed service
