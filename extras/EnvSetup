@@ -70,10 +70,7 @@ clear
 
 display_logo
 
-########## ---------- Utility Functions, Variables... ---------- ##########
-dotfiles_path="https://raw.githubusercontent.com/ddat-tebayo/dotfiles/main/home"
-pacman_wrappers="paru" # https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
-
+########## ---------- Utility Functions ---------- ##########
 backup() {
     local src=$1
     local backup_folder="$HOME/.RiceBackup"
@@ -82,8 +79,8 @@ backup() {
     local base_name=$(basename "$src")
     local dest="$backup_folder/$base_name"_"$datetime"
 
-    mkdir -p "$backup_folder"
-
+    [ ! -d "$backup_folder" ] && mkdir -p "$backup_folder"
+    
     if [ -d "$src" ] || [ -f "$src" ]; then
         if mv "$src" "$dest" 2>> RiceError.log; then
             success_msg "'$base_name' backed up successfully at $dest"
@@ -162,16 +159,18 @@ install_pacman_wrappers() {
         installing_msg "Installing $pacman_wrappers..."
         {
             # Install rustup, cargo, rustc... before installing paru
-            sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
-            rustup default stable >/dev/null
+            sudo pacman -S base-devel rustup --noconfirm
+            rustup default stable
 
             # Install paru
             cd "$HOME" || exit
-            git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
+            git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git
             cd $pacman_wrappers || exit
-            makepkg -si --noconfirm >/dev/null 2>&1
-            success_msg "   Install $pacman_wrappers (AUR helper) successfully"
+            makepkg -si --noconfirm
+            cd "$HOME" && rm -rf paru
+            clear
 
+            success_msg "Install $pacman_wrappers (AUR helper) successfully"
             restart_shell_session
             sleep 2
         } || {
@@ -180,7 +179,6 @@ install_pacman_wrappers() {
             exit 1
         }
     fi
-}
 }
 
 change_shell_to_zsh() {
@@ -205,7 +203,6 @@ change_shell_to_zsh() {
                 	;;
             	[Nn]* )
                 	warning_msg "Please reboot your system manually to apply changes."
-                	sleep 2
                 	exit 0
                 	;;
             	*) error_msg "Error: just write 'y' or 'n'" ;;
@@ -216,24 +213,6 @@ change_shell_to_zsh() {
     fi
 
 	sleep 2
-}
-
-install_needed_packages() {
-    info_msg "Install needed fonts"
-    check_install_dependencies "noto-fonts noto-fonts-emoji noto-fonts-cjk noto-fonts-extra"
-    sleep 2
-
-    info_msg "Install needed packages for using"
-    check_install_dependencies "alsa-utils pipewire pipewire-alsa pipewire-jack pipewire-pulse mpv unzip rar"
-    sleep 2
-
-    info_msg "Install needed apps"
-    check_install_dependencies "firefox google-chrome discord obsidian obs-studio telegram-desktop"
-    sleep 2
-
-    info_msg "Install needed packages for development"
-    check_install_dependencies "bat eza openssh ripgrep visual-studio-code-bin"
-    sleep 2
 }
 
 clone_dot_config() {
@@ -294,7 +273,7 @@ install_fnm_nodes() {
 }
 
 clone_neovim_config() {
-    info_msg "Install neovim"
+    info_msg "Install neovim and clone my nvim config"
 
     backup "$HOME/.config/nvim"
 
@@ -308,7 +287,7 @@ clone_neovim_config() {
     installing_msg "Cloning neovim-config from dotfiles repo..."
     # Clone my .zshrc and cleanup
     {
-        git clone --no-progress https://github.com/ddat-tebayo/nvim-config.git ~/.config/nvim >/dev/null 2>&1
+        git clone --no-progress $nvim_config_path ~/.config/nvim >/dev/null 2>&1
         rm -rf ~/.config/nvim/.git
         rm -rf ~/.config/nvim/.github
         success_msg "Install neovim successfully"
@@ -317,10 +296,28 @@ clone_neovim_config() {
     }
 }
 
-###########################################
-install_pacman_wrappers
-change_shell_to_zsh
-install_needed_packages
+####################################################
+
+# For this installation, you need an AUR helper. I use `paru`, you can check other AUR helpers here:
+# https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
+pacman_wrappers="paru" 
+install_pacman_wrappers # Install paru
+
+change_shell_to_zsh # Change your default shell to zsh
+
+# Install needed packages (fonts, essential middleware/tools, apps, software development tools... )
+info_msg "Install needed packages"
+check_install_dependencies "noto-fonts noto-fonts-emoji noto-fonts-cjk noto-fonts-extra \
+alsa-utils pipewire pipewire-alsa pipewire-jack pipewire-pulse mpv unzip rar \
+firefox google-chrome discord obsidian obs-studio telegram-desktop \
+bat eza openssh ripgrep visual-studio-code-bin"
+
+# Clone '.zshrc', '.xprofile', '.gitconfig' from dotfiles repo
+dotfiles_path="https://raw.githubusercontent.com/ddat-tebayo/dotfiles/main/home"
 clone_dot_config
-install_fnm_nodes
+
+install_fnm_nodes # Install fnm and Nodejs latest LTS version
+
+# Install and clone my neovim config
+nvim_config_path="https://github.com/ddat-tebayo/nvim-config.git"
 clone_neovim_config
