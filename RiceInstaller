@@ -81,7 +81,7 @@ clear
 
 display_logo
 
-########## ---------- Utility ---------- ##########
+########## ---------- Utility Function ---------- ##########
 backup() {
     local src=$1
     local backup_folder="$HOME/.RiceBackup"
@@ -90,22 +90,16 @@ backup() {
     local base_name=$(basename "$src")
     local dest="$backup_folder/$base_name"_"$datetime"
 
-    mkdir -p "$backup_folder"
-
-    if [ -d "$src" ]; then
-        src_type="directory"
-    elif [ -f "$src" ]; then
-        src_type="file"
-    fi
-
+    [ ! -d "$backup_folder" ] && mkdir -p "$backup_folder"
+    
     if [ -d "$src" ] || [ -f "$src" ]; then
         if mv "$src" "$dest" 2>> RiceError.log; then
-            success_msg "The '$base_name' $src_type backed up successfully at $dest"
+            success_msg "'$base_name' backed up successfully at $dest"
         else
-            error_msg "Failed to backup '$base_name' $src_type. See ~/RiceError.log"
+            error_msg "Failed to backup '$base_name'. See ~/RiceError.log"
         fi
     else
-        warning_msg "The '$base_name' $src_type does not exist, no backup needed"
+        warning_msg "'$base_name' does not exist, no backup needed"
     fi
     printf "\n"
 }
@@ -116,188 +110,164 @@ copy_from_dotfiles() {
     local base_name=$(basename "$src")
 
     if cp -R "$src" "$dest" 2>> RiceError.log; then
-        success_msg "$base_name copied succesfully"
-        sleep 1
+        success_msg "Copy '$base_name' to '$dest' succesfully"
     else
-        error_msg "$base_name failed to copy. See ~/RiceError.log for more details"
-        sleep 1
+        error_msg "'$base_name' failed to copy. See ~/RiceError.log for more details"
     fi
 }
 
-########## ---------- Install packages ---------- ##########
-display_logo 
-
+########## ---------- Functional components ---------- ##########
 pacman_wrappers="paru" # https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
-if ! command -v $pacman_wrappers >/dev/null 2>&1; then
-    info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
-    installing_msg "Installing $pacman_wrappers..."
+install_pacman_wrappers() {
+    if ! command -v $pacman_wrappers >/dev/null 2>&1; then
+        info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
+        installing_msg "Installing $pacman_wrappers..."
+        {
+            # Install rustup, cargo, rustc... before installing paru
+            sudo pacman -S base-devel rustup --noconfirm
+            rustup default stable
+
+            # Install paru
+            cd "$HOME" || exit
+            git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git
+            cd $pacman_wrappers || exit
+            makepkg -si --noconfirm
+            clear
+
+            success_msg "Install $pacman_wrappers (AUR helper) successfully"
+            restart_shell_session
+            sleep 2
+        } || {
+            error_msg "   Failed to install $pacman_wrappers. You may need to install it manually."
+            sleep 3
+            exit 1
+        }
+    fi
+}
+
+check_install_dependencies() {
+    local dependencies="$1"
+    local missing=()
+
+    # Split the string into an array using space as delimiter
+    IFS=' ' read -r -a deps <<< "$dependencies"
+
+    is_installed() {
+        pacman -Q "$1" &> /dev/null
+    }
+    installing_msg "Installing needed packages.."
+
+    for package in "${deps[@]}"; do
+        if ! is_installed "$package"; then
+            missing+=("$package")
+        else
+            warning_msg "   '$package' is already installed on your system!"
+        fi
+    done
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        for package in "${missing[@]}"; do
+            if $pacman_wrappers -S "$package" --noconfirm --skipreview >/dev/null 2>&1; then
+                success_msg "   '$package' has been installed successfully"
+            else
+                error_msg "   Failed to install '$package'. You may need to install it manually"
+            fi
+        done
+    fi
+    printf "\n"
+}
+
+prepare_folder() {
+    # Checks if the user-dirs.dirs file doesn't exist in ~/.config
+    if [ ! -e "$HOME/.config/user-dirs.dirs" ]; then
+        xdg-user-dirs-update
+    fi
+}
+
+clone_the_rice() {
+    info_msg "Clone the Rice dotfiles"
+
+    repo_url="https://github.com/ddat-tebayo/dotfiles"
+    repo_dir="$HOME/dattebayo_dotfiles"
+
+    # Checks if the repository folder exists, and deletes it if it does
+    if [ -d "$repo_dir" ]; then
+        rm -rf "$repo_dir"
+    fi
+
+    # Clone the repository
+    installing_msg "Cloning dotfiles from $repo_url"
     {
-        # Install rustup, cargo, rustc... before installing paru
-        sudo pacman -S base-devel rustup --noconfirm >/dev/null 2>&1
-        rustup default stable >/dev/null 2>&1
-
-        # Install paru
-        cd "$HOME" || exit
-        git clone --no-progress https://aur.archlinux.org/$pacman_wrappers.git >/dev/null 2>&1
-        cd $pacman_wrappers || exit
-        makepkg -si --noconfirm >/dev/null 2>&1
-        success_msg "   Install $pacman_wrappers (AUR helper) successfully"
-
-        restart_shell_session
+        git clone --depth=1 "$repo_url" "$repo_dir" >/dev/null 2>&1
+        rm -rf ~/.config/nvim/.git
+        rm -rf ~/.config/nvim/.github
+        success_msg "   Clone dotfiles repo successfully"
         sleep 2
     } || {
-        error_msg "   Failed to install $pacman_wrappers. You may need to install it manually."
-        sleep 3
+        error_msg "   Failed to clone dotfiles. You may need to install it manually."
         exit 1
     }
-fi
-
-info_msg "Install needed packages.."
-dependencies=(alacritty brightnessctl bspwm cool-retro-term dunst feh firefox imagemagick jq jgmenu kitty libwebp maim \
-                mpc mpd neofetch ncmpcpp picom playerctl polybar ranger \
-                rofi starship sxhkd ttf-jetbrains-mono ttf-jetbrains-mono-nerd \
-		ueberzug webp-pixbuf-loader xclip xdg-user-dirs)
-
-is_installed() {
-    pacman -Q "$1" &> /dev/null
 }
 
-installing_msg "Checking for required packages..."
-for package in "${dependencies[@]}"; do
-    if ! is_installed "$package"; then
-        if $pacman_wrappers -S "$package" --noconfirm --skipreview >/dev/null 2>&1; then
-            success_msg "   '$package' has been installed successfully"
-            sleep 1
-        else
-            error_msg "   Failed to install '$package'. You may need to install it manually"
-            sleep 1
-        fi
-    else
-        warning_msg "   '$package' is already installed on your system!"
-        sleep 1
+backup_old_config() {
+    info_msg "Backup files, store in ~/.RiceBackup"
+
+    for folder in alacritty bspwm dunst eww mpd ncmpcpp paru picom polybar ranger rofi sxhkd zsh; do
+        backup "$HOME/.config/$folder"
+    done
+
+    backup "$HOME/.mozilla/firefox/*.default-release/chrome"
+    backup "$HOME/.mozilla/firefox/*.default-release/user.js"
+
+    sleep 2
+}
+
+copy_the_rice() {
+    info_msg "Install dotfiles"
+    installing_msg "Copying files to their respective directories.."
+
+    [ ! -d ~/.config ] && mkdir -p ~/.config
+    [ ! -d ~/.local/bin ] && mkdir -p ~/.local/bin
+    [ ! -d ~/.local/share ] && mkdir -p ~/.local/share
+
+    for dirs in $repo_dir/.config/*; do
+        copy_from_dotfiles "${dirs}" "$HOME/.config/"
+    done
+
+    for folder in applications asciiart fonts; do
+        copy_from_dotfiles "$repo_dir/.local/share/$folder" "$HOME/.local/share/"
+    done
+
+    copy_from_dotfiles "$repo_dir/.local/bin/" "$HOME/.local/"
+
+    fc-cache -rv >/dev/null 2>&1
+    sleep 2
+}
+
+enable_needed_services() {
+    ##### Enable MPD service #####
+
+    info_msg "Enable mpd service"
+    # Check if the mpd service is enabled at the global (system) level
+    if systemctl is-enabled --quiet mpd.service; then
+        warning_msg "Disabling and stopping the global mpd service"
+        sudo systemctl stop mpd.service
+        sudo systemctl disable mpd.service
     fi
-done
-sleep 2
+    installing_msg "Enabling and starting the user-level mpd service"
+    systemctl --user enable --now mpd.service
+    success_msg "Enable mpd service successfully"
+}
 
-# ########## ---------- Prepare Folders ---------- ##########
+####################################################
+install_pacman_wrappers # Install paru
 
-# Checks if the user-dirs.dirs file doesn't exist in ~/.config
-if [ ! -e "$HOME/.config/user-dirs.dirs" ]; then
-    xdg-user-dirs-update
-fi
+# Install needed packages
+check_install_dependencies "alacritty brightnessctl bspwm dunst feh firefox kitty mpc mpd neofetch ncmpcpp picom \
+polybar ranger rofi starship sxhkd ttf-jetbrains-mono ttf-jetbrains-mono-nerd xdg-user-dirs"
 
-# ########## ---------- Clone the Rice! ---------- ##########
-info_msg "Clone the Rice dotfiles"
-
-repo_url="https://github.com/ddat-tebayo/dotfiles"
-repo_dir="$HOME/dattebayo_dotfiles"
-
-# Checks if the repository folder exists, and deletes it if it does
-if [ -d "$repo_dir" ]; then
-    rm -rf "$repo_dir"
-fi
-
-# Clone the repository
-installing_msg "Cloning dotfiles from $repo_url"
-if git clone --depth=1 "$repo_url" "$repo_dir" >/dev/null 2>&1; then
-    success_msg "Clone dotfiles repo successfully"
-    rm -rf ~/.config/nvim/.git
-    rm -rf ~/.config/nvim/.github
-else
-    error_msg "Failed to clone dotfiles. You may need to install it manually."
-    exit 1
-fi
-sleep 2
-
-# ########## ---------- Backup files ---------- ##########
-
-info_msg "Backup files, store in ~/.RiceBackup"
-
-for folder in alacritty bspwm dunst eww mpd ncmpcpp paru picom polybar ranger rofi sxhkd zsh; do
-    backup "$HOME/.config/$folder"
-done
-
-backup "$HOME/.mozilla/firefox/*.default-release/chrome"
-backup "$HOME/.mozilla/firefox/*.default-release/user.js"
-
-sleep 2
-
-# ########## ---------- Copy the Rice! ---------- ##########
-
-info_msg "Install dotfiles"
-installing_msg "Copying files to their respective directories.."
-
-[ ! -d ~/.config ] && mkdir -p ~/.config
-[ ! -d ~/.local/bin ] && mkdir -p ~/.local/bin
-[ ! -d ~/.local/share ] && mkdir -p ~/.local/share
-
-for dirs in $repo_dir/.config/*; do
-    copy_from_dotfiles "${dirs}" "$HOME/.config/"
-done
-
-for folder in applications asciiart fonts; do
-    copy_from_dotfiles "$repo_dir/.local/share/$folder" "$HOME/.local/share/"
-done
-
-copy_from_dotfiles "$repo_dir/.local/bin/" "$HOME/.local/"
-
-fc-cache -rv >/dev/null 2>&1
-sleep 2
-# ########## ---------- Install others ---------- ##########
-info_msg "Install tdrop for scratchpads"
-
-if command -v tdrop >/dev/null 2>&1; then
-    warning_msg "Tdrop is already installed"
-else
-    installing_msg "Installing tdrop, this should be fast!"
-    if paru -S tdrop-git --skipreview --noconfirm >/dev/null 2>&1; then
-        success_msg "Install tdrop successfully."
-    else
-        error_msg "Failed to install tdrop. You may need to install it manually."
-    fi
-fi
-sleep 2
-
-info_msg "Install xqp"
-
-if command -v xqp >/dev/null 2>&1; then
-    warning_msg "xqp is already installed"
-else
-    installing_msg "Installing xqp, this should be fast!"
-    if paru -S xqp --skipreview --noconfirm >/dev/null 2>&1; then
-        success_msg "Install xqp successfully."
-    else
-        error_msg "Failed to install xqp. You may need to install it manually."
-    fi
-fi
-sleep 2
-
-info_msg "Install Eww"
-
-if command -v eww >/dev/null 2>&1; then
-    warning_msg "Eww is already installed"
-else
-    installing_msg "Installing eww, this could take 10 mins or more..."
-    if paru -S eww-git --skipreview --noconfirm >/dev/null 2>&1; then
-        success_msg "Install eww successfully."
-    else
-        error_msg "Failed to install eww. You may need to install it manually."
-    fi
-fi
-sleep 2
-
-# ########## ---------- Enable MPD service ---------- ##########
-
-info_msg "Enable mpd service"
-
-# Check if the mpd service is enabled at the global (system) level
-if systemctl is-enabled --quiet mpd.service; then
-    warning_msg "Disabling and stopping the global mpd service"
-    sudo systemctl stop mpd.service
-    sudo systemctl disable mpd.service
-fi
-
-success_msg "Enabling and starting the user-level mpd service"
-systemctl --user enable --now mpd.service
-
-success_msg "Enabling mpd service successfully"
+prepare_folder # Prepare Folders
+clone_the_rice # Clone the Rice!
+backup_old_config # Backup old config, store in ~/.RiceBackup
+copy_the_rice # Copy files and dirs to their respective directories.
+enable_needed_services # Enable/Start needed service
