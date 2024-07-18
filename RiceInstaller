@@ -67,7 +67,7 @@ if [ "$current_dir" != "$home_dir" ]; then
     exit 1
 fi
 
-printf '%s%sThis script will:\n%s- Check for necessary dependencies and install any that are missing.\n- Clone my repository into your HOME directory, backs up your files, and copies new files.\n- DO NOT modify any of your system configurations.\n- Need your root password to install missing dependencies.\n%s\n\n' "${BLD}" "${BLU}" "${RST}"
+printf '%s%sThis script will:\n%s-Install an AUR helper (paru).\n- Check for necessary dependencies and install any that are missing.\n- Clone my repository into your HOME directory, backs up your files, and copies new files.\n- DO NOT modify any of your system configurations.\n- Need your root password to install missing dependencies.\n%s\n\n' "${BLD}" "${BLU}" "${RST}"
 
 while true; do
     read -rp "$BLD$YLW Do you wish to continue? [y/N]: $RST" yn
@@ -117,7 +117,6 @@ copy_from_dotfiles() {
 }
 
 ########## ---------- Functional components ---------- ##########
-pacman_wrappers="paru" # https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
 install_pacman_wrappers() {
     if ! command -v $pacman_wrappers >/dev/null 2>&1; then
         info_msg "Install $pacman_wrappers (AUR Helper), this could take a long time..."
@@ -155,7 +154,7 @@ check_install_dependencies() {
     is_installed() {
         pacman -Q "$1" &> /dev/null
     }
-    installing_msg "Installing needed packages.."
+    installing_msg "Checking for required packages..."
 
     for package in "${deps[@]}"; do
         if ! is_installed "$package"; then
@@ -298,9 +297,13 @@ enable_needed_services() {
 }
 
 ####################################################
+# For this installation, you need an AUR helper. I use `paru`, you can check other AUR helpers here:
+# https://wiki.archlinux.org/title/AUR_helpers#Pacman_wrappers
+pacman_wrappers="paru" 
 install_pacman_wrappers # Install paru
 
 # Install needed packages
+info_msg "Install needed packages"
 check_install_dependencies "alacritty brightnessctl bspwm \
 dunst feh firefox kitty mpc mpd neofetch ncmpcpp picom \
 polybar ranger rofi sxhkd ttf-jetbrains-mono ttf-jetbrains-mono-nerd xdg-user-dirs"
